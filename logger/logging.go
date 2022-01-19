@@ -14,7 +14,22 @@ const (
 type Category string
 
 const (
-	CategorySomething = Category("something")
+	CategoryAuthentication     = Category("authentication")
+	CategoryConfiguration      = Category("configuration")
+	CategoryDatabase           = Category("database")
+	CategoryDriver             = Category("driver")
+	CategoryFile               = Category("file")
+	CategoryHost               = Category("host")
+	CategoryIam                = Category("iam")
+	CategoryIntrusionDetection = Category("intrusion_detection")
+	CategoryMalware            = Category("malware")
+	CategoryNetwork            = Category("network")
+	CategoryPackage            = Category("package")
+	CategoryProcess            = Category("process")
+	CategoryRegistry           = Category("registry")
+	CategorySession            = Category("session")
+	CategoryThreat             = Category("threat")
+	CategoryWeb                = Category("web")
 )
 
 type ElasticLoggingFields struct {
@@ -45,10 +60,12 @@ type LogWrapper struct {
 	*zap.Logger
 }
 
-// GetLogger returns a new logger wrapping the zap logger with a default event.kind of "event"
-func GetLogger() *LogWrapper {
+// Get returns a new logger wrapping the zap logger with a default event.kind of "event"
+// action should be string describing the action being performed
+// https://www.elastic.co/guide/en/ecs/current/ecs-event.html#field-event-action
+func Get(action string) *LogWrapper {
 	return &LogWrapper{
-		Logger: logger.With(zap.String("event.kind", string(KindEvent))),
+		Logger: logger.With(zap.String("event.kind", string(KindEvent))).With(zap.String("event.action", action)),
 	}
 }
 
@@ -58,10 +75,16 @@ func (log *LogWrapper) StateKind() *LogWrapper {
 	return log
 }
 
+func (log *LogWrapper) Category(c Category) *LogWrapper {
+	log.Logger = log.Logger.With(zap.String("event.category", string(c)))
+
+	return log
+}
+
 // Info logs a message at InfoLevel. The message includes any fields passed
 // at the log site, as well as any fields accumulated on the logger.
 func (log *LogWrapper) Info(msg string, fields ...zap.Field) {
-	log.With(zap.Int("event.severity", 0)).Info(msg, fields...)
+	log.With(zap.Int("event.severity", 1)).Info(msg, fields...)
 }
 
 // Debug logs a message at DebugLevel. The message includes any fields passed
