@@ -1,4 +1,4 @@
-module FCT_Helpers_Go
+module github.com/datomar-labs-inc/FCT_Helpers_Go
 
 go 1.17
 
