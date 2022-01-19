@@ -1,6 +1,9 @@
 package lggr
 
-import "go.uber.org/zap"
+import (
+	"go.opentelemetry.io/otel/trace"
+	"go.uber.org/zap"
+)
 
 var logger *zap.Logger
 
@@ -77,6 +80,19 @@ func (log *LogWrapper) StateKind() *LogWrapper {
 
 func (log *LogWrapper) Category(c Category) *LogWrapper {
 	log.Logger = log.Logger.With(zap.String("event.category", string(c)))
+
+	return log
+}
+
+func (log *LogWrapper) Span(span trace.Span) *LogWrapper {
+	if span.SpanContext().HasSpanID() {
+		//logger = logger.With(zap.String("transaction.id", span.SpanContext().SpanID().String()))
+		log.Logger = log.Logger.With(zap.String("span.id", span.SpanContext().SpanID().String()))
+	}
+
+	if span.SpanContext().HasTraceID() {
+		log.Logger = log.Logger.With(zap.String("trace.id", span.SpanContext().TraceID().String()))
+	}
 
 	return log
 }
