@@ -54,18 +54,18 @@ var (
 
 const StandardHeartbeatSpacing = 10 * time.Second
 
-// activityCtx is a helper to create a context with workflow.ActivityOptions attached
+// ActivityCtx is a helper to create a context with workflow.ActivityOptions attached
 // The activity options will be created with a max run duration of timeout
-func activityCtx(ctx workflow.Context, timeout time.Duration, retry *temporal.RetryPolicy) workflow.Context {
+func ActivityCtx(ctx workflow.Context, timeout time.Duration, retry *temporal.RetryPolicy) workflow.Context {
 	return workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: timeout,
 		RetryPolicy:         retry,
 	})
 }
 
-// activityCtxDC is a helper to create a disconnected context with workflow.ActivityOptions attached
+// ActivityCtxDC is a helper to create a disconnected context with workflow.ActivityOptions attached
 // The activity options will be created with a max run duration of timeout
-func activityCtxDC(ctx workflow.Context, timeout time.Duration) workflow.Context {
+func ActivityCtxDC(ctx workflow.Context, timeout time.Duration) workflow.Context {
 	dCtx, _ := workflow.NewDisconnectedContext(ctx)
 
 	return workflow.WithActivityOptions(dCtx, workflow.ActivityOptions{
@@ -73,10 +73,10 @@ func activityCtxDC(ctx workflow.Context, timeout time.Duration) workflow.Context
 	})
 }
 
-// activityCtxHB is a helper to create a context with workflow.ActivityOptions attached
+// ActivityCtxHB is a helper to create a context with workflow.ActivityOptions attached
 // The activity options will be created with a max run duration of timeout
 // And a default heartbeat spacing of StandardHeartbeatSpacing
-func activityCtxHB(ctx workflow.Context, timeout time.Duration, retry *temporal.RetryPolicy) workflow.Context {
+func ActivityCtxHB(ctx workflow.Context, timeout time.Duration, retry *temporal.RetryPolicy) workflow.Context {
 	return workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
 		StartToCloseTimeout: timeout,
 		HeartbeatTimeout:    StandardHeartbeatSpacing,
