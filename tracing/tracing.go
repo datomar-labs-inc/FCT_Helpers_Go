@@ -12,11 +12,11 @@ import (
 	"os"
 )
 
-func SetupTracing(serviceName string) (closer func() error, err error) {
-	return setupOpenTelemetry(context.Background(), serviceName)
+func SetupTracing(serviceName string, sampler trace.Sampler) (closer func() error, err error) {
+	return setupOpenTelemetry(context.Background(), serviceName, sampler)
 }
 
-func setupOpenTelemetry(ctx context.Context, serviceName string) (func() error, error) {
+func setupOpenTelemetry(ctx context.Context, serviceName string, sampler trace.Sampler) (func() error, error) {
 	res, err := resource.New(ctx, resource.WithAttributes(
 		semconv.ServiceNameKey.String(serviceName),
 	))
@@ -37,7 +37,7 @@ func setupOpenTelemetry(ctx context.Context, serviceName string) (func() error, 
 	batchSpanProcessor := trace.NewBatchSpanProcessor(traceExporter)
 
 	traceProvider := trace.NewTracerProvider(
-		trace.WithSampler(trace.AlwaysSample()),
+		trace.WithSampler(sampler),
 		trace.WithResource(res),
 		trace.WithSpanProcessor(batchSpanProcessor),
 	)
