@@ -58,6 +58,8 @@ func New(config ...Config) fiber.Handler {
 
 		c.SetUserContext(otelCtx)
 
+		c.Response().Header.Add("X-Trace-ID", span.SpanContext().TraceID().String())
+
 		defer span.End()
 
 		err = c.Next()
