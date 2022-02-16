@@ -39,6 +39,7 @@ func New(config ...Config) fiber.Handler {
 				trace.WithAttributes(semconv.NetTransportTCP),
 				trace.WithSpanKind(trace.SpanKindServer),
 				trace.WithAttributes(attribute.StringSlice("http.x-forwarded-for", c.IPs())),
+				trace.WithAttributes(attribute.String("http.x_forwarded_for", c.GetReqHeaders()["x-forwarded-for"])),
 			},
 			cfg.TracerStartAttributes,
 		)
