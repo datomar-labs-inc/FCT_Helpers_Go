@@ -43,12 +43,20 @@ func New(config *Config, logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
 
 		latency := time.Now().Sub(start)
 
+		var ip string
+
+		if len(c.IPs()) > 0 {
+			ip = c.IPs()[0]
+		} else {
+			ip = c.IP()
+		}
+
 		fields = append(fields,
 			zap.Int("status", c.Response().StatusCode()),
 			zap.String("method", c.Method()),
 			zap.String("path", path),
 			zap.String("query", query),
-			zap.String("ip", c.IP()),
+			zap.String("ip", ip),
 			zap.String("user_agent", c.GetReqHeaders()["User-Agent"]),
 			zap.Time("start_time", start),
 			zap.Duration("latency", latency),
