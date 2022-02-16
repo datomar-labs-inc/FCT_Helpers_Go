@@ -3,6 +3,7 @@ package fiber_otel
 import (
 	"bytes"
 	"fmt"
+	"go.opentelemetry.io/otel/attribute"
 	"text/template"
 
 	"github.com/gofiber/fiber/v2"
@@ -37,9 +38,7 @@ func New(config ...Config) fiber.Handler {
 				trace.WithAttributes(semconv.HTTPSchemeKey.String(c.Protocol())),
 				trace.WithAttributes(semconv.NetTransportTCP),
 				trace.WithSpanKind(trace.SpanKindServer),
-				// TODO:
-				// - x-forwarded-for
-				// -
+				trace.WithAttributes(attribute.StringSlice("http.x-forwarded-for", c.IPs())),
 			},
 			cfg.TracerStartAttributes,
 		)
