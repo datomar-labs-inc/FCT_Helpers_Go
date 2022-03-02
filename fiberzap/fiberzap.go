@@ -62,7 +62,13 @@ func New(config *Config, logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
 			zap.Duration("latency", latency),
 		)
 
-		logger.Info(path, fields...)
+		if c.Response().StatusCode() >= 400 && c.Response().StatusCode() < 500 {
+			logger.Warn(path, fields...)
+		} else if c.Response().StatusCode() >= 500 && c.Response().StatusCode() < 600 {
+			logger.Error(path, fields...)
+		} else {
+			logger.Info(path, fields...)
+		}
 
 		return nil
 	}
