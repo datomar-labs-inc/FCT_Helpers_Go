@@ -1,6 +1,7 @@
 package lggr
 
 import (
+	"context"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
@@ -70,6 +71,23 @@ func Get(action string) *LogWrapper {
 	return &LogWrapper{
 		Logger: logger.With(zap.String("event.kind", string(KindEvent))).With(zap.String("event.action", action)),
 	}
+}
+
+// Ctx will attach a context to the logger, it will also attach tracing information
+func (log *LogWrapper) Ctx(ctx context.Context) *LogWrapper {
+	sc := trace.SpanContextFromContext(ctx)
+
+	if sc.IsValid() {
+		if sc.HasSpanID() {
+			log.Logger = log.Logger.With(zap.String("span.id", sc.SpanID().String()))
+		}
+
+		if sc.HasTraceID() {
+			log.Logger = log.Logger.With(zap.String("trace.id", sc.TraceID().String()))
+		}
+	}
+
+	return log
 }
 
 // StateKind overrides the event.kind field, and sets it to state
