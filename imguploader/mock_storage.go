@@ -29,8 +29,8 @@ func (m *MockStorage) StoreBytes(key string, details *ImageDetails, file []byte)
 	return nil
 }
 
-func (m *MockStorage) Read(key string) (io.ReadCloser, error) {
-	return io.NopCloser(bytes.NewReader([]byte("hi there"))), nil
+func (m *MockStorage) Read(key string) (io.ReadCloser, *ImageDetails, error) {
+	return io.NopCloser(bytes.NewReader([]byte("hi there"))), nil, nil
 }
 
 func (m *MockStorage) ReadBytes(key string) ([]byte, error) {

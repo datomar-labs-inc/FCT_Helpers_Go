@@ -5,6 +5,6 @@ import "io"
 type ImageUploaderStorage interface {
 	Store(key string, details *ImageDetails, reader io.Reader) error
 	StoreBytes(key string, details *ImageDetails, file []byte) error
-	Read(key string) (io.ReadCloser, error)
+	Read(key string) (io.ReadCloser, *ImageDetails, error)
 	ReadBytes(key string) ([]byte, error)
 }

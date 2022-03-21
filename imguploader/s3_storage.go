@@ -20,7 +20,9 @@ func NewMinioS3Storage(client *minio.Client, bucket string) *MinioS3UploaderStor
 }
 
 func (m *MinioS3UploaderStorage) Store(key string, details *ImageDetails, reader io.Reader) error {
-	_, err := m.client.PutObject(m.bucket, key, reader, int64(details.ConvertedSizeBytes), minio.PutObjectOptions{})
+	_, err := m.client.PutObject(m.bucket, key, reader, int64(details.ConvertedSizeBytes), minio.PutObjectOptions{
+		ContentType: details.ConvertedMimeType,
+	})
 	if err != nil {
 		return err
 	}
@@ -37,17 +39,28 @@ func (m *MinioS3UploaderStorage) StoreBytes(key string, details *ImageDetails, f
 	return nil
 }
 
-func (m *MinioS3UploaderStorage) Read(key string) (io.ReadCloser, error) {
+func (m *MinioS3UploaderStorage) Read(key string) (io.ReadCloser, *ImageDetails, error) {
 	file, err := m.client.GetObject(m.bucket, key, minio.GetObjectOptions{})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return file, nil
+	stat, err := file.Stat()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	details := &ImageDetails{
+		ID:                 key,
+		ConvertedMimeType:  stat.ContentType,
+		ConvertedSizeBytes: uint64(stat.Size),
+	}
+
+	return file, details, nil
 }
 
 func (m *MinioS3UploaderStorage) ReadBytes(key string) ([]byte, error) {
-	reader, err := m.Read(key)
+	reader, _, err := m.Read(key)
 	if err != nil {
 		return nil, err
 	}

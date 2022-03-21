@@ -3,12 +3,11 @@ package imguploader
 import (
 	"bytes"
 	"fmt"
+	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
 	"github.com/miolini/datacounter"
 	"golang.org/x/image/webp"
 	"image"
-	"image/gif"
-	"image/jpeg"
 	"image/png"
 	"io"
 	"net/http"
@@ -38,11 +37,13 @@ type ImageDetails struct {
 
 type ImageUploader struct {
 	storage ImageUploaderStorage
+	cache   bool
 }
 
 func NewImageUploader(storage ImageUploaderStorage) *ImageUploader {
 	return &ImageUploader{
 		storage: storage,
+		cache:   true,
 	}
 }
 
@@ -61,6 +62,8 @@ func (i *ImageUploader) Upload(name string, reader io.Reader) (*ImageDetails, er
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode image: %w", err)
 	}
+
+	imaging.Encode(&imageBuffer, img, imaging.PNG)
 
 	details.ConvertedMimeType = FormatPNG
 	details.ConvertedSizeBytes = uint64(imageBuffer.Len())
@@ -110,17 +113,17 @@ func (i *ImageUploader) decodeImageStream(reader io.Reader) (image.Image, *Image
 
 	switch mime {
 	case FormatPNG:
-		img, err = png.Decode(imageSizeCounter)
+		img, err = imaging.Decode(imageSizeCounter, imaging.AutoOrientation(true))
 		if err != nil {
 			return nil, nil, err
 		}
 	case FormatJpeg:
-		img, err = jpeg.Decode(imageSizeCounter)
+		img, err = imaging.Decode(imageSizeCounter, imaging.AutoOrientation(true))
 		if err != nil {
 			return nil, nil, err
 		}
 	case FormatGif:
-		img, err = gif.Decode(imageSizeCounter)
+		img, err = imaging.Decode(imageSizeCounter, imaging.AutoOrientation(true))
 		if err != nil {
 			return nil, nil, err
 		}
