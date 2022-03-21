@@ -1,10 +1,13 @@
 package imguploader
 
-import "io"
+import (
+	"context"
+	"io"
+)
 
 type ImageUploaderStorage interface {
-	Store(key string, details *ImageDetails, reader io.Reader) error
-	StoreBytes(key string, details *ImageDetails, file []byte) error
-	Read(key string) (io.ReadCloser, *ImageDetails, error)
-	ReadBytes(key string) ([]byte, error)
+	Store(ctx context.Context, key string, details *ImageDetails, reader io.Reader) error
+	StoreBytes(ctx context.Context, key string, details *ImageDetails, file []byte) error
+	Read(ctx context.Context, key string) (io.ReadCloser, *ImageDetails, error)
+	ReadBytes(ctx context.Context, key string) ([]byte, error)
 }

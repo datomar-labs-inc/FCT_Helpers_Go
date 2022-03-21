@@ -2,6 +2,7 @@ package imguploader
 
 import (
 	"bytes"
+	"context"
 	"github.com/minio/minio-go/v6"
 	"io"
 	"io/ioutil"
@@ -19,8 +20,8 @@ func NewMinioS3Storage(client *minio.Client, bucket string) *MinioS3UploaderStor
 	}
 }
 
-func (m *MinioS3UploaderStorage) Store(key string, details *ImageDetails, reader io.Reader) error {
-	_, err := m.client.PutObject(m.bucket, key, reader, int64(details.ConvertedSizeBytes), minio.PutObjectOptions{
+func (m *MinioS3UploaderStorage) Store(ctx context.Context, key string, details *ImageDetails, reader io.Reader) error {
+	_, err := m.client.PutObjectWithContext(ctx, m.bucket, key, reader, int64(details.ConvertedSizeBytes), minio.PutObjectOptions{
 		ContentType: details.ConvertedMimeType,
 	})
 	if err != nil {
@@ -30,8 +31,8 @@ func (m *MinioS3UploaderStorage) Store(key string, details *ImageDetails, reader
 	return nil
 }
 
-func (m *MinioS3UploaderStorage) StoreBytes(key string, details *ImageDetails, file []byte) error {
-	_, err := m.client.PutObject(m.bucket, key, bytes.NewReader(file), int64(details.ConvertedSizeBytes), minio.PutObjectOptions{})
+func (m *MinioS3UploaderStorage) StoreBytes(ctx context.Context, key string, details *ImageDetails, file []byte) error {
+	_, err := m.client.PutObjectWithContext(ctx, m.bucket, key, bytes.NewReader(file), int64(details.ConvertedSizeBytes), minio.PutObjectOptions{})
 	if err != nil {
 		return err
 	}
@@ -39,8 +40,8 @@ func (m *MinioS3UploaderStorage) StoreBytes(key string, details *ImageDetails, f
 	return nil
 }
 
-func (m *MinioS3UploaderStorage) Read(key string) (io.ReadCloser, *ImageDetails, error) {
-	file, err := m.client.GetObject(m.bucket, key, minio.GetObjectOptions{})
+func (m *MinioS3UploaderStorage) Read(ctx context.Context, key string) (io.ReadCloser, *ImageDetails, error) {
+	file, err := m.client.GetObjectWithContext(ctx, m.bucket, key, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -59,8 +60,8 @@ func (m *MinioS3UploaderStorage) Read(key string) (io.ReadCloser, *ImageDetails,
 	return file, details, nil
 }
 
-func (m *MinioS3UploaderStorage) ReadBytes(key string) ([]byte, error) {
-	reader, _, err := m.Read(key)
+func (m *MinioS3UploaderStorage) ReadBytes(ctx context.Context, key string) ([]byte, error) {
+	reader, _, err := m.Read(ctx, key)
 	if err != nil {
 		return nil, err
 	}

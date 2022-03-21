@@ -22,7 +22,7 @@ func (i *ImageUploader) FiberUploadHandler(c *fiber.Ctx) (*ImageDetails, error) 
 
 	defer f.Close()
 
-	details, err := i.Upload(file.Filename, f)
+	details, err := i.Upload(c.UserContext(), file.Filename, f)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (i *ImageUploader) FiberUploadHandler(c *fiber.Ctx) (*ImageDetails, error) 
 }
 
 func (i *ImageUploader) FiberGetHandler(c *fiber.Ctx, key string) error {
-	reader, details, err := i.storage.Read(key)
+	reader, details, err := i.storage.Read(c.UserContext(), key)
 	if err != nil {
 		return err
 	}

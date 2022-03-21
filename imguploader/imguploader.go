@@ -2,6 +2,7 @@ package imguploader
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
@@ -47,8 +48,8 @@ func NewImageUploader(storage ImageUploaderStorage) *ImageUploader {
 	}
 }
 
-func (i *ImageUploader) Upload(name string, reader io.Reader) (*ImageDetails, error) {
-	img, details, err := i.decodeImageStream(reader)
+func (i *ImageUploader) Upload(ctx context.Context, name string, reader io.Reader) (*ImageDetails, error) {
+	img, details, err := i.decodeImageStream(ctx, reader)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +69,7 @@ func (i *ImageUploader) Upload(name string, reader io.Reader) (*ImageDetails, er
 	details.ConvertedMimeType = FormatPNG
 	details.ConvertedSizeBytes = uint64(imageBuffer.Len())
 
-	err = i.storage.Store(details.ID, details, &imageBuffer)
+	err = i.storage.Store(ctx, details.ID, details, &imageBuffer)
 	if err != nil {
 		return nil, fmt.Errorf("failed to store image: %w", err)
 	}
@@ -76,7 +77,7 @@ func (i *ImageUploader) Upload(name string, reader io.Reader) (*ImageDetails, er
 	return details, nil
 }
 
-func (i *ImageUploader) decodeImageStream(reader io.Reader) (image.Image, *ImageDetails, error) {
+func (i *ImageUploader) decodeImageStream(ctx context.Context, reader io.Reader) (image.Image, *ImageDetails, error) {
 	sniffBuffer := make([]byte, 512)
 
 	// Read the first 512 bytes of the reader

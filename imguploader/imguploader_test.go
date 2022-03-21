@@ -1,6 +1,7 @@
 package imguploader
 
 import (
+	"context"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -25,7 +26,7 @@ func testPNG(t *testing.T) {
 
 	defer f.Close()
 
-	details, err := upl.Upload(f.Name(), f)
+	details, err := upl.Upload(context.Background(), f.Name(), f)
 	if err != nil {
 		t.Error(err)
 	} else {
@@ -49,7 +50,7 @@ func testJpeg(t *testing.T) {
 
 	defer f.Close()
 
-	details, err := upl.Upload(f.Name(), f)
+	details, err := upl.Upload(context.Background(), f.Name(), f)
 	if err != nil {
 		t.Error(err)
 	} else {
@@ -73,7 +74,7 @@ func testGif(t *testing.T) {
 
 	defer f.Close()
 
-	details, err := upl.Upload(f.Name(), f)
+	details, err := upl.Upload(context.Background(), f.Name(), f)
 	if err != nil {
 		t.Error(err)
 	} else {
@@ -97,7 +98,7 @@ func testWebp(t *testing.T) {
 
 	defer f.Close()
 
-	details, err := upl.Upload(f.Name(), f)
+	details, err := upl.Upload(context.Background(), f.Name(), f)
 	if err != nil {
 		t.Error(err)
 	} else {
