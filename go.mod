@@ -1,6 +1,6 @@
 module github.com/datomar-labs-inc/FCT_Helpers_Go
 
-go 1.17
+go 1.18
 
 require (
 	github.com/disintegration/imaging v1.6.2
