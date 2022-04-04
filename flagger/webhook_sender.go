@@ -85,3 +85,22 @@ func (ws *WebhookSender) GetUserInfo(req *GetUserInfoRequest) (*GetUserInfoRespo
 
 	return &res, nil
 }
+
+func (ws *WebhookSender) SearchUsers(req *SearchUsersRequest) (*SearchUsersResponse, error) {
+	body, err := ws.send(ws.url, &Webhook{
+		Op:          OpSearchUsers,
+		SearchUsers: req,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var res SearchUsersResponse
+
+	err = json.Unmarshal(body, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}

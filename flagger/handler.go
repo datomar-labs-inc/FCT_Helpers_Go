@@ -42,6 +42,11 @@ func (wh *WebhookHandler) processBody(body []byte, signature string) ([]byte, er
 		if err != nil {
 			return nil, err
 		}
+	case OpSearchUsers:
+		result, err = wh.webhooker.SearchUsers(webhook.SearchUsers)
+		if err != nil {
+			return nil, err
+		}
 	default:
 		return nil, errors.New("invalid op " + webhook.Op)
 	}
