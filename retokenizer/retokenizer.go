@@ -7,30 +7,33 @@ import (
 )
 
 type Opts struct {
-	Provider      AuthenticationProvider
 	Tracer        trace.Tracer
 	Cache         cache.Cache
 	JWTSigningKey []byte
 }
 
 type ReTokenizer struct {
-	provider AuthenticationProvider
-	tracer   trace.Tracer
-	cache    cache.Cache
-	key      []byte
+	tracer trace.Tracer
+	cache  cache.Cache
+	key    []byte
 }
 
 func New(opts *Opts) *ReTokenizer {
 	return &ReTokenizer{
-		provider: opts.Provider,
-		tracer:   opts.Tracer,
-		cache:    opts.Cache,
-		key:      opts.JWTSigningKey,
+		tracer: opts.Tracer,
+		cache:  opts.Cache,
+		key:    opts.JWTSigningKey,
 	}
 }
 
 func (rt *ReTokenizer) KeyFunc() func(token *jwt.Token) (interface{}, error) {
 	return func(token *jwt.Token) (interface{}, error) {
 		return rt.key, nil
+	}
+}
+
+func KeyBasedKeyFunc(key []byte) func(token *jwt.Token) (interface{}, error) {
+	return func(token *jwt.Token) (interface{}, error) {
+		return key, nil
 	}
 }

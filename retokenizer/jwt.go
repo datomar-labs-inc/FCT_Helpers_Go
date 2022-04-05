@@ -17,7 +17,7 @@ type CreateJWTOpts struct {
 	ExpiresIn time.Duration
 }
 
-func CreateJWTForUser[U any](rt *ReTokenizer, opts *CreateJWTOpts, sub string, user *U) (string, *JWTClaims[U], error) {
+func CreateJWTForUser[U any](key []byte, opts *CreateJWTOpts, sub string, user *U) (string, *JWTClaims[U], error) {
 	claims := JWTClaims[U]{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Audience:  jwt.ClaimStrings{opts.Audience},
@@ -31,7 +31,7 @@ func CreateJWTForUser[U any](rt *ReTokenizer, opts *CreateJWTOpts, sub string, u
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	ss, err := token.SignedString(rt.key)
+	ss, err := token.SignedString(key)
 	if err != nil {
 		return "", nil, err
 	}
@@ -39,13 +39,23 @@ func CreateJWTForUser[U any](rt *ReTokenizer, opts *CreateJWTOpts, sub string, u
 	return ss, &claims, nil
 }
 
-func ValidateUserJWT[U any](rt *ReTokenizer, token string) (*U, error) {
-	parsedToken, err := jwt.ParseWithClaims(token, &JWTClaims[U]{}, rt.KeyFunc())
+func ValidateUserJWT[U any](key []byte, token, issuer string) (*U, error) {
+	parsedToken, err := jwt.ParseWithClaims(token, &JWTClaims[U]{}, KeyBasedKeyFunc(key), jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}))
 	if err != nil {
 		return nil, err
 	}
 
+	if !parsedToken.Valid {
+		return nil, errors.New("invalid token")
+	}
+
 	if claims, ok := parsedToken.Claims.(*JWTClaims[U]); ok && parsedToken.Valid && claims.Valid() == nil {
+		if !claims.VerifyIssuer(issuer, true) {
+			return nil, errors.New("invalid issuer")
+		} else if !claims.VerifyExpiresAt(time.Now(), true) {
+			return nil, errors.New("token expired")
+		}
+
 		return claims.User, nil
 	} else {
 		return nil, errors.New("invalid token")
