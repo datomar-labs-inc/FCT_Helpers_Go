@@ -1,6 +1,7 @@
 package flagger
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/hex"
@@ -20,7 +21,7 @@ func NewHandler(wh WebHooker, key string) *WebhookHandler {
 	return &WebhookHandler{webhooker: wh, key: []byte(key)}
 }
 
-func (wh *WebhookHandler) processBody(body []byte, signature string) ([]byte, error) {
+func (wh *WebhookHandler) processBody(ctx context.Context, body []byte, signature string) ([]byte, error) {
 	valid := wh.verifyBody(body, signature)
 
 	if !valid {
@@ -38,12 +39,12 @@ func (wh *WebhookHandler) processBody(body []byte, signature string) ([]byte, er
 
 	switch webhook.Op {
 	case OpGetUserInfo:
-		result, err = wh.webhooker.GetUserInfo(webhook.GetUserInfo)
+		result, err = wh.webhooker.GetUserInfo(ctx, webhook.GetUserInfo)
 		if err != nil {
 			return nil, err
 		}
 	case OpSearchUsers:
-		result, err = wh.webhooker.SearchUsers(webhook.SearchUsers)
+		result, err = wh.webhooker.SearchUsers(ctx, webhook.SearchUsers)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +60,7 @@ func (wh *WebhookHandler) FiberMiddleware(c *fiber.Ctx) error {
 
 	body := c.Body()
 
-	res, err := wh.processBody(body, signature)
+	res, err := wh.processBody(c.UserContext(), body, signature)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}

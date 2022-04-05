@@ -1,13 +1,15 @@
 package flagger
 
+import "context"
+
 const (
 	OpGetUserInfo = "get_user_info"
 	OpSearchUsers = "search_users"
 )
 
 type WebHooker interface {
-	GetUserInfo(req *GetUserInfoRequest) (*GetUserInfoResponse, error)
-	SearchUsers(req *SearchUsersRequest) (*SearchUsersResponse, error)
+	GetUserInfo(ctx context.Context, req *GetUserInfoRequest) (*GetUserInfoResponse, error)
+	SearchUsers(ctx context.Context, req *SearchUsersRequest) (*SearchUsersResponse, error)
 }
 
 type Webhook struct {
