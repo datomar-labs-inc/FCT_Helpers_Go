@@ -4,6 +4,7 @@ const (
 	AuthSystemCustom   = "custom"
 	AuthSystemFirebase = "firebase"
 	AuthSystemAuth0    = "auth0"
+	AuthSystemCognito  = "cognito"
 )
 
 const (

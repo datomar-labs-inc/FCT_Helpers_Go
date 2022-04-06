@@ -1,9 +1,17 @@
 package fct_helpers
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+	"reflect"
+)
 
 func StrPtr(s string) *string {
 	return &s
+}
+
+func ToPtr[T any](v T) *T {
+	return &v
 }
 
 func StringSliceFromAnySlice[St any](slice []St) (out []string) {
@@ -63,4 +71,32 @@ func Must[R any](returnValue R, err error) R {
 	}
 
 	return returnValue
+}
+
+func IsNil(i any) bool {
+	if i == nil {
+		return true
+	}
+	switch reflect.TypeOf(i).Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
+		return reflect.ValueOf(i).IsNil()
+	}
+	return false
+}
+
+// JSONConvert will convert anything into a type via json serialization
+func JSONConvert[R any](input any) (R, bool, error) {
+	var output R
+
+	jsb, err := json.Marshal(input)
+	if err != nil {
+		return output, false, err
+	}
+
+	err = json.Unmarshal(jsb, &output)
+	if err != nil {
+		return output, false, err
+	}
+
+	return output, true, nil
 }

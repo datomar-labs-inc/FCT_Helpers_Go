@@ -8,15 +8,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
 type WebhookSender struct {
-	key    []byte
-	url    string
-	client *http.Client
+	key         []byte
+	url         string
+	client      *http.Client
+	hasInternal bool
+	internal    *fiber.App
 }
 
 func NewSender(key string, url string) *WebhookSender {
@@ -27,6 +31,14 @@ func NewSender(key string, url string) *WebhookSender {
 			Timeout: 5 * time.Second,
 		},
 	}
+}
+
+// WithInternal will set an internal fiber instance (so that flagger may call it's self)
+// When the webhook url begins with internal:// this endpoint will be used
+func (ws *WebhookSender) WithInternal(app *fiber.App) *WebhookSender {
+	ws.hasInternal = true
+	ws.internal = app
+	return ws
 }
 
 func (ws *WebhookSender) send(url string, webhook *Webhook) ([]byte, error) {
@@ -40,7 +52,7 @@ func (ws *WebhookSender) send(url string, webhook *Webhook) ([]byte, error) {
 
 	hashString := hex.EncodeToString(hash.Sum(nil))
 
-	req, err := http.NewRequest("POST", url, bytes.NewReader(jsonBytes))
+	req, err := http.NewRequest("POST", strings.TrimPrefix(url, "internal://"), bytes.NewReader(jsonBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -48,9 +60,18 @@ func (ws *WebhookSender) send(url string, webhook *Webhook) ([]byte, error) {
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("X-Flagger-Sig", hashString)
 
-	res, err := ws.client.Do(req)
-	if err != nil {
-		return nil, err
+	var res *http.Response
+
+	if strings.HasPrefix(url, "internal://") {
+		res, err = ws.internal.Test(req)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res, err = ws.client.Do(req)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	defer res.Body.Close()
