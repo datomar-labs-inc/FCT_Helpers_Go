@@ -56,3 +56,11 @@ func SliceToInterfaceSlice[I any](input []I) []any {
 
 	return result
 }
+
+func Must[R any](returnValue R, err error) R {
+	if err != nil {
+		panic(err)
+	}
+
+	return returnValue
+}
