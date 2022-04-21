@@ -73,6 +73,20 @@ func Get(action string) *LogWrapper {
 	}
 }
 
+// NewWith returns a new LogWrapper with the provided fields, this is intended to be used as a fresh logger and should not be used to directly
+// log messages
+func NewWith(fields ...zap.Field) *LogWrapper {
+	return &LogWrapper{
+		Logger: logger,
+	}
+}
+
+func (log *LogWrapper) Get(action string) *LogWrapper {
+	return &LogWrapper{
+		Logger: log.Logger.With(zap.String("event.kind", string(KindEvent))).With(zap.String("event.action", action)),
+	}
+}
+
 // Ctx will attach a context to the logger, it will also attach tracing information
 func (log *LogWrapper) Ctx(ctx context.Context) *LogWrapper {
 	sc := trace.SpanContextFromContext(ctx)
