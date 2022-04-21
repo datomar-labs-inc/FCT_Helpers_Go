@@ -4,9 +4,11 @@ go 1.18
 
 require (
 	github.com/disintegration/imaging v1.6.2
+	github.com/friendsofgo/errors v0.9.2
 	github.com/gofiber/fiber/v2 v2.25.0
 	github.com/golang-jwt/jwt/v4 v4.4.0
 	github.com/google/uuid v1.3.0
+	github.com/lib/pq v1.10.5
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/miolini/datacounter v1.0.3
 	github.com/stretchr/testify v1.7.0
@@ -60,6 +62,7 @@ require (
 	golang.org/x/sys v0.0.0-20211209171907-798191bca915 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
 	google.golang.org/grpc v1.42.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect

@@ -7,4 +7,8 @@ const (
 	CodeWrapped
 	CodeDBNotConnected
 	CodeDBNoRows
+	CodeUserExists
+	CodeTimeout
+	CodePanic
+	CodeInvalidLoginDetails
 )
