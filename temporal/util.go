@@ -2,9 +2,12 @@ package fct_temporal
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -27,6 +30,7 @@ var (
 		MaximumAttempts:    1,
 	}
 
+	// ActivityMaxRetriesS 3 retries
 	ActivityMaxRetriesS = &temporal.RetryPolicy{
 		InitialInterval:    time.Second,
 		BackoffCoefficient: 2,
@@ -34,6 +38,7 @@ var (
 		MaximumAttempts:    3,
 	}
 
+	// ActivityMaxRetriesM 15 retries
 	ActivityMaxRetriesM = &temporal.RetryPolicy{
 		InitialInterval:    time.Second,
 		BackoffCoefficient: 2,
@@ -114,6 +119,63 @@ func ExecuteWorkflowSync[T any](ctx context.Context, temporalClient client.Clien
 	}
 
 	return
+}
+
+type workflowRunIdentifier struct {
+	WorkflowID string `json:"wid"`
+	RunID      string `json:"rid"`
+}
+
+func MustGetWorkflowSingleID(workflowID, runID string) string {
+	workflowID = strings.TrimSpace(workflowID)
+	runID = strings.TrimSpace(runID)
+
+	if workflowID == "" {
+		panic("empty workflow id")
+	} else if runID == "" {
+		panic("empty run id")
+	}
+
+	marshalled, err := json.Marshal(workflowRunIdentifier{
+		WorkflowID: workflowID,
+		RunID:      runID,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return base64.URLEncoding.EncodeToString(marshalled)
+}
+
+func MustExtractWorkflowSingleID(ctx workflow.Context) string {
+	info := workflow.GetInfo(ctx)
+	return MustGetWorkflowSingleID(info.WorkflowExecution.ID, info.WorkflowExecution.RunID)
+}
+
+func MustParseWorkflowSingleID(id string) (workflowID string, runID string) {
+	decoded, err := base64.URLEncoding.DecodeString(id)
+	if err != nil {
+		panic(err)
+	}
+
+	var unmarshalled workflowRunIdentifier
+
+	err = json.Unmarshal(decoded, &unmarshalled)
+	if err != nil {
+		panic(err)
+	}
+
+	return unmarshalled.WorkflowID, unmarshalled.RunID
+}
+
+func Receive[T any](ctx workflow.Context, ch workflow.ReceiveChannel) *T {
+	var result T
+
+	// TODO handle more
+
+	_ = ch.Receive(ctx, &result)
+
+	return &result
 }
 
 func skipCI(t *testing.T) {
