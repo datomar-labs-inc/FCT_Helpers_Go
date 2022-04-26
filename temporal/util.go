@@ -144,7 +144,7 @@ func MustGetWorkflowSingleID(workflowID, runID string) string {
 		panic(err)
 	}
 
-	return base64.URLEncoding.EncodeToString(marshalled)
+	return base64.RawURLEncoding.EncodeToString(marshalled)
 }
 
 func MustExtractWorkflowSingleID(ctx workflow.Context) string {
@@ -152,20 +152,30 @@ func MustExtractWorkflowSingleID(ctx workflow.Context) string {
 	return MustGetWorkflowSingleID(info.WorkflowExecution.ID, info.WorkflowExecution.RunID)
 }
 
-func MustParseWorkflowSingleID(id string) (workflowID string, runID string) {
-	decoded, err := base64.URLEncoding.DecodeString(id)
+func ParseWorkflowSingleID(id string) (workflowID string, runID string, err error) {
+
+	decoded, err := base64.RawURLEncoding.DecodeString(id)
 	if err != nil {
-		panic(err)
+		return "", "", err
 	}
 
 	var unmarshalled workflowRunIdentifier
 
 	err = json.Unmarshal(decoded, &unmarshalled)
 	if err != nil {
+		return "", "", err
+	}
+
+	return unmarshalled.WorkflowID, unmarshalled.RunID, nil
+}
+
+func MustParseWorkflowSingleID(id string) (workflowID string, runID string) {
+	wfid, rid, err := ParseWorkflowSingleID(id)
+	if err != nil {
 		panic(err)
 	}
 
-	return unmarshalled.WorkflowID, unmarshalled.RunID
+	return wfid, rid
 }
 
 func Receive[T any](ctx workflow.Context, ch workflow.ReceiveChannel) *T {

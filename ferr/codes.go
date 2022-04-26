@@ -11,4 +11,6 @@ const (
 	CodeTimeout
 	CodePanic
 	CodeInvalidLoginDetails
+	CodeFlowCompleted
+	CodeFlowFailed
 )
