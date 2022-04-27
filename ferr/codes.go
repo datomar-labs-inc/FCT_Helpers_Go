@@ -7,10 +7,12 @@ const (
 	CodeWrapped
 	CodeDBNotConnected
 	CodeDBNoRows
-	CodeUserExists
+	CodeAccountExists
 	CodeTimeout
 	CodePanic
 	CodeInvalidLoginDetails
 	CodeFlowCompleted
 	CodeFlowFailed
+	CodeMissingPermissions
+	CodeNotAuthenticated
 )

@@ -57,7 +57,7 @@ func New(config *Config, logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
 			zap.String("path", path),
 			zap.String("query", query),
 			zap.String("ip", ip),
-			zap.String("user_agent", c.GetReqHeaders()["User-Agent"]),
+			zap.String("user_agent", c.GetReqHeaders()["Account-Agent"]),
 			zap.Time("start_time", start),
 			zap.Duration("latency", latency),
 		)

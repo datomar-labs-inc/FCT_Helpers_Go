@@ -34,6 +34,9 @@ const (
 
 	// ETThirdPartySystem Any error originating from a system not controlled by Datomar (database is not a third party system)
 	ETThirdPartySystem
+
+	// ETPermissions an error caused by a user attempting to perform an action that they do not have permissions for
+	ETPermissions
 )
 
 type FCTError struct {

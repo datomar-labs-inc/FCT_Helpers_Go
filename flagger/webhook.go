@@ -23,7 +23,7 @@ type GetUserInfoRequest struct {
 }
 
 type GetUserInfoResponse struct {
-	Users map[string]UserInfo `json:"users"`
+	Users map[string]UserInfo `json:"accounts"`
 }
 
 type SearchUsersRequest struct {
@@ -37,6 +37,6 @@ type SearchUsersRequest struct {
 }
 
 type SearchUsersResponse struct {
-	Users      []UserInfo `json:"users"`
+	Users      []UserInfo `json:"accounts"`
 	TotalCount int        `json:"total_count"`
 }
