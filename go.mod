@@ -8,6 +8,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.29.0
 	github.com/golang-jwt/jwt/v4 v4.4.0
 	github.com/google/uuid v1.3.0
+	github.com/iancoleman/strcase v0.2.0
 	github.com/lib/pq v1.10.5
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/miolini/datacounter v1.0.3

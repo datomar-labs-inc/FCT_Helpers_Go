@@ -1,10 +1,10 @@
 package ferr
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/iancoleman/strcase"
 	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/temporal"
 	"net/http"
@@ -142,22 +142,12 @@ func Infer(err error) *FCTError {
 	}
 
 	// Check for unmarshal errors
-	if unmarshalErr, ok := err.(*json.UnmarshalTypeError); ok {
-		return New(ETValidation, CodeInvalidInput, "invalid input").
-			WithHTTPCode(http.StatusBadRequest).
-			WithFieldError(&FieldError{
-				Field:   unmarshalErr.Field,
-				Message: unmarshalErr.Error(),
-			})
-	}
-
-	// Check for unmarshal errors
 	var unmarshalTypeError *fiber.UnmarshalTypeError
 	if errors.As(err, &unmarshalTypeError) {
 		return New(ETValidation, CodeInvalidInput, "invalid input").
 			WithHTTPCode(http.StatusBadRequest).
 			WithFieldError(&FieldError{
-				Field:   unmarshalTypeError.Field,
+				Field:   strcase.ToSnakeWithIgnore(unmarshalTypeError.Field, "."),
 				Message: unmarshalTypeError.Error(),
 			})
 	}
