@@ -1,6 +1,9 @@
 package ferr
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 var AccountExists = New(ETValidation, CodeAccountExists, "that account already exists").
 	WithHTTPCode(http.StatusBadRequest)
@@ -13,3 +16,13 @@ var InvalidLoginDetails = New(ETAuth, CodeInvalidLoginDetails, "your login detai
 
 var MissingPermissions = New(ETPermissions, CodeMissingPermissions, "you do not have the required permissions for this action").
 	WithHTTPCode(http.StatusForbidden)
+
+var MissingArgument = func(argName string) *FCTError {
+	return New(ETValidation, CodeMissingArgument, fmt.Sprintf("missing required argument: %s", argName)).
+		WithHTTPCode(http.StatusBadRequest)
+}
+
+var NotFound = func(resourceName string) *FCTError {
+	return New(ETGeneric, CodeNotFound, fmt.Sprintf("could not locate resource: %s", resourceName)).
+		WithHTTPCode(http.StatusNotFound)
+}

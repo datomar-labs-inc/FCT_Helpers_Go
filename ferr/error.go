@@ -1,8 +1,10 @@
 package ferr
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/temporal"
 	"net/http"
@@ -48,6 +50,9 @@ type FCTError struct {
 	// Code is a machine-readable code that provides specific information about the error, see codes.go
 	Code Code `json:"code"`
 
+	// Source is a developer readable string that indicates where the error originated
+	Source string `json:"source"`
+
 	// HTTPCode is an optional code that indicates what http status code this error represents
 	HTTPCode *int `json:"http_code,omitempty"`
 
@@ -56,6 +61,8 @@ type FCTError struct {
 
 	// UnderlyingError is any error that is being wrapped by this FCTError
 	UnderlyingError error `json:"underlying_error,omitempty"`
+
+	Fields []*FieldError `json:"fields"`
 }
 
 // New creates a new FCTError with a message, code, and type
@@ -134,6 +141,27 @@ func Infer(err error) *FCTError {
 			WithUnderlying(panicErr)
 	}
 
+	// Check for unmarshal errors
+	if unmarshalErr, ok := err.(*json.UnmarshalTypeError); ok {
+		return New(ETValidation, CodeInvalidInput, "invalid input").
+			WithHTTPCode(http.StatusBadRequest).
+			WithFieldError(&FieldError{
+				Field:   unmarshalErr.Field,
+				Message: unmarshalErr.Error(),
+			})
+	}
+
+	// Check for unmarshal errors
+	var unmarshalTypeError *fiber.UnmarshalTypeError
+	if errors.As(err, &unmarshalTypeError) {
+		return New(ETValidation, CodeInvalidInput, "invalid input").
+			WithHTTPCode(http.StatusBadRequest).
+			WithFieldError(&FieldError{
+				Field:   unmarshalTypeError.Field,
+				Message: unmarshalTypeError.Error(),
+			})
+	}
+
 	return &FCTError{
 		Message:         err.Error(),
 		Type:            ETGeneric,
@@ -184,10 +212,23 @@ func (f *FCTError) WithHTTPCode(code int) *FCTError {
 	return f
 }
 
+func (f *FCTError) WithFieldError(ferr *FieldError) *FCTError {
+	f.Fields = append(f.Fields, ferr)
+	return f
+}
+
 func (f *FCTError) Error() string {
 	return fmt.Sprintf("(%d-%d) %s: %v", f.Code, f.Type, f.Message, f.UnderlyingError)
 }
 
 func (f *FCTError) Unwrap() error {
 	return f.UnderlyingError
+}
+
+func (f *FCTError) ToAPIResponseError() *APIResponseError {
+	return &APIResponseError{
+		Message: "",
+		Code:    f.Code,
+		Fields:  f.Fields,
+	}
 }
