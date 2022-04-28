@@ -3,11 +3,14 @@ package ferr
 import (
 	"errors"
 	"fmt"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr/valid"
 	"github.com/gofiber/fiber/v2"
 	"github.com/iancoleman/strcase"
 	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/temporal"
+	"gopkg.in/go-playground/validator.v9"
 	"net/http"
+	"strings"
 )
 
 type ErrorType = int
@@ -152,6 +155,26 @@ func Infer(err error) *FCTError {
 			})
 	}
 
+	var validationError validator.ValidationErrors
+	if errors.As(err, &validationError) {
+		fe := New(ETValidation, CodeInvalidInput, "invalid input").
+			WithHTTPCode(http.StatusBadRequest)
+
+		translated := validationError.Translate(valid.UniversalTranslator)
+
+		for field, message := range translated {
+			// field starts with the struct name, followed by a dot, so it should be removed
+			field = strcase.ToSnakeWithIgnore(strings.Join(strings.Split(field, ".")[1:], "."), ".")
+
+			fe = fe.WithFieldError(&FieldError{
+				Field:   field,
+				Message: message,
+			})
+		}
+
+		return fe
+	}
+
 	return &FCTError{
 		Message:         err.Error(),
 		Type:            ETGeneric,
@@ -217,7 +240,7 @@ func (f *FCTError) Unwrap() error {
 
 func (f *FCTError) ToAPIResponseError() *APIResponseError {
 	return &APIResponseError{
-		Message: "",
+		Message: f.Message,
 		Code:    f.Code,
 		Fields:  f.Fields,
 	}
