@@ -1,9 +1,20 @@
 package ferr
 
-type APIResponseError struct {
-	Message string        `json:"message"`
-	Code    Code          `json:"code"`
-	Fields  []*FieldError `json:"fields,omitempty"`
+import "fmt"
+
+type APIError struct {
+	Type   string `json:"type"`
+	Code   Code   `json:"code"`
+	Detail string `json:"detail"`
+}
+
+func (a APIError) Error() string {
+	return fmt.Sprintf("%s %s %s", a.Type, a.Code, a.Detail)
+}
+
+type APIValidationError struct {
+	APIError
+	Fields []*FieldError `json:"fields"`
 }
 
 type FieldError struct {
