@@ -9,6 +9,7 @@ import (
 	"go.temporal.io/sdk/client"
 	tp_otel "go.temporal.io/sdk/contrib/opentelemetry"
 	"go.temporal.io/sdk/workflow"
+	"go.uber.org/zap"
 	"os"
 	"time"
 )
@@ -24,7 +25,7 @@ type TemporalSetupConfig struct {
 func SetupTemporal(config *TemporalSetupConfig) client.Client {
 	var logg TemporalZapLogger
 
-	temporalLogger := TemporalZapLogger{logger: lggr.Get("temporal-internal").Logger}
+	temporalLogger := TemporalZapLogger{logger: lggr.Get("temporal-internal").Logger.WithOptions(zap.AddCallerSkip(1))}
 
 	// First, ensure the desired namespace exists
 	nsc, err := client.NewNamespaceClient(attachTracer(client.Options{

@@ -69,7 +69,8 @@ type LogWrapper struct {
 // https://www.elastic.co/guide/en/ecs/current/ecs-event.html#field-event-action
 func Get(action string) *LogWrapper {
 	return &LogWrapper{
-		Logger: logger.With(zap.String("event.kind", string(KindEvent))).With(zap.String("event.action", action)),
+		Logger: logger.With(zap.String("event.kind", string(KindEvent))).With(zap.String("event.action", action)).
+			WithOptions(zap.AddCallerSkip(1)),
 	}
 }
 
@@ -77,7 +78,7 @@ func Get(action string) *LogWrapper {
 // log messages
 func NewWith(fields ...zap.Field) *LogWrapper {
 	return &LogWrapper{
-		Logger: logger,
+		Logger: logger.With(fields...),
 	}
 }
 
