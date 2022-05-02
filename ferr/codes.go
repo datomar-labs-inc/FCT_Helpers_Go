@@ -5,7 +5,7 @@ type Code string
 const (
 	CodeUnknown             = Code("unknown")
 	CodeWrapped             = "wrapped"
-	CodeAccountExists       = "accout_exists"
+	CodeAccountExists       = "account_exists"
 	CodeTimeout             = "timeout"
 	CodePanic               = "panic"
 	CodeInvalidLoginDetails = "invalid_login_details"
