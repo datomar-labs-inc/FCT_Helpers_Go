@@ -17,12 +17,12 @@ var InvalidLoginDetails = New(ETAuth, CodeInvalidLoginDetails, "your login detai
 var MissingPermissions = New(ETPermissions, CodeMissingPermissions, "you do not have the required permissions for this action").
 	WithHTTPCode(http.StatusForbidden)
 
-var MissingArgument = func(argName string) *FCTError {
+var MissingArgument = func(argName string) *Error {
 	return New(ETValidation, CodeMissingArgument, fmt.Sprintf("missing required argument: %s", argName)).
 		WithHTTPCode(http.StatusBadRequest)
 }
 
-var NotFound = func(resourceName string) *FCTError {
+var NotFound = func(resourceName string) *Error {
 	return New(ETGeneric, CodeNotFound, fmt.Sprintf("could not locate resource: %s", resourceName)).
 		WithHTTPCode(http.StatusNotFound)
 }

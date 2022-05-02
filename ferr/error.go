@@ -13,38 +13,7 @@ import (
 	"strings"
 )
 
-type ErrorType = int
-
-const (
-	// ETGeneric is for errors that do not fall into any other category
-	ETGeneric = ErrorType(iota)
-
-	// ETValidation indicates that a piece of data is invalid, either user provided, or provided by the programmer
-	ETValidation
-
-	// ETNetwork Indicates an error that occurred due to a networking issue. eg. failed to connect, failed to resolve host, etc...
-	ETNetwork
-
-	// ETSystem An error has occurred in the underlying system. eg. out of memory, disk full, etc...
-	ETSystem
-
-	// ETTemporal an error has occurred in temporal
-	ETTemporal
-
-	// ETAuth an error occurred during authentication, the requester failed to authenticate
-	ETAuth
-
-	// ETDatabase an error occurred during a database operation
-	ETDatabase
-
-	// ETThirdPartySystem Any error originating from a system not controlled by Datomar (database is not a third party system)
-	ETThirdPartySystem
-
-	// ETPermissions an error caused by a user attempting to perform an action that they do not have permissions for
-	ETPermissions
-)
-
-type FCTError struct {
+type Error struct {
 	Message string `json:"message"`
 
 	// Type is a broad error category
@@ -62,28 +31,28 @@ type FCTError struct {
 	// Retry is an optional
 	Retry *ErrorRetryInfo `json:"retry,omitempty"`
 
-	// UnderlyingError is any error that is being wrapped by this FCTError
+	// UnderlyingError is any error that is being wrapped by this Error
 	UnderlyingError error `json:"underlying_error,omitempty"`
 
-	Fields []*FieldError `json:"fields"`
+	Fields []*FieldError `json:"fields,omitempty"`
 }
 
-// New creates a new FCTError with a message, code, and type
-func New(eType ErrorType, code Code, msg string) *FCTError {
-	return &FCTError{
+// New creates a new Error with a message, code, and type
+func New(eType ErrorType, code Code, msg string) *Error {
+	return &Error{
 		Message: msg,
 		Type:    eType,
 		Code:    code,
 	}
 }
 
-// Infer will attempt to smartly extract error information into an FCTError
-func Infer(err error) *FCTError {
+// Infer will attempt to smartly extract error information into an Error
+func Infer(err error) *Error {
 	if err == nil {
 		return nil
 	}
 
-	if fctErr, ok := err.(*FCTError); ok {
+	if fctErr, ok := err.(*Error); ok {
 		return fctErr
 	}
 
@@ -91,7 +60,7 @@ func Infer(err error) *FCTError {
 	pqErr := ExtractPQError(err)
 
 	if pqErr != nil {
-		return &FCTError{
+		return &Error{
 			Message:         pqErr.Message,
 			Type:            ETDatabase,
 			Code:            CodeUnknown,
@@ -175,7 +144,7 @@ func Infer(err error) *FCTError {
 		return fe
 	}
 
-	return &FCTError{
+	return &Error{
 		Message:         err.Error(),
 		Type:            ETGeneric,
 		Code:            CodeUnknown,
@@ -183,13 +152,13 @@ func Infer(err error) *FCTError {
 	}
 }
 
-// InferAPIError will attempt to smartly extract error information into an FCTError
+// InferAPIError will attempt to smrtley extract error information into an Error
 func InferAPIError(err error) error {
 	if err == nil {
 		return nil
 	}
 
-	if fctErr, ok := err.(*FCTError); ok {
+	if fctErr, ok := err.(*Error); ok {
 		return fctErr
 	}
 
@@ -198,7 +167,7 @@ func InferAPIError(err error) error {
 
 	if pqErr != nil {
 
-		return &FCTError{
+		return &Error{
 			Message:         pqErr.Message,
 			Type:            ETDatabase,
 			Code:            CodeUnknown,
@@ -226,7 +195,6 @@ func InferAPIError(err error) error {
 
 	var timeoutErr *temporal.TimeoutError
 	if errors.As(err, &timeoutErr) {
-
 		switch timeoutErr.TimeoutType() {
 		case enums.TIMEOUT_TYPE_SCHEDULE_TO_START, enums.TIMEOUT_TYPE_SCHEDULE_TO_CLOSE:
 			return New(ETTemporal, CodeTimeout, timeoutErr.Error()).
@@ -282,7 +250,7 @@ func InferAPIError(err error) error {
 		return fe
 	}
 
-	return &FCTError{
+	return &Error{
 		Message:         err.Error(),
 		Type:            ETGeneric,
 		Code:            CodeUnknown,
@@ -290,10 +258,10 @@ func InferAPIError(err error) error {
 	}
 }
 
-// Wrap creates a new FCTError out of any go error, this should be used sparingly, and most errors should
-// be converted into a full FCTError so that the system can identify specifically what is wrong
-func Wrap(err error) *FCTError {
-	return &FCTError{
+// Wrap creates a new Error out of any go error, this should be used sparingly, and most errors should
+// be converted into a full Error so that the system can identify specifically what is wrong
+func Wrap(err error) *Error {
+	return &Error{
 		Message:         err.Error(),
 		Code:            CodeWrapped,
 		UnderlyingError: err,
@@ -307,15 +275,15 @@ type ErrorRetryInfo struct {
 	WaitTimeMS  int  `json:"wait_time_ms"`
 }
 
-// WithUnderlying will attach any go error to the FCTError. This indicates that err is the cause of the FCTError
-func (f *FCTError) WithUnderlying(err error) *FCTError {
+// WithUnderlying will attach any go error to the Error. This indicates that err is the cause of the Error
+func (f *Error) WithUnderlying(err error) *Error {
 	f.UnderlyingError = err
 
 	return f
 }
 
 // WithRetry will attach retry information, indicating that the upstream caller can retry this call after waitTime
-func (f *FCTError) WithRetry(waitTime int) *FCTError {
+func (f *Error) WithRetry(waitTime int) *Error {
 	f.Retry = &ErrorRetryInfo{
 		ShouldRetry: true,
 		WaitTimeMS:  waitTime,
@@ -324,28 +292,32 @@ func (f *FCTError) WithRetry(waitTime int) *FCTError {
 	return f
 }
 
-// WithHTTPCode will attach a http status code to this FCTError, this is used by the upstream caller to set the
+// WithHTTPCode will attach a http status code to this Error, this is used by the upstream caller to set the
 // http response status code
-func (f *FCTError) WithHTTPCode(code int) *FCTError {
+func (f *Error) WithHTTPCode(code int) *Error {
 	f.HTTPCode = &code
 
 	return f
 }
 
-func (f *FCTError) WithFieldError(ferr *FieldError) *FCTError {
+func (f *Error) WithFieldError(ferr *FieldError) *Error {
 	f.Fields = append(f.Fields, ferr)
 	return f
 }
 
-func (f *FCTError) Error() string {
+func (f *Error) Error() string {
 	return fmt.Sprintf("(%d-%d) %s: %v", f.Code, f.Type, f.Message, f.UnderlyingError)
 }
 
-func (f *FCTError) Unwrap() error {
+func (f *Error) Unwrap() error {
 	return f.UnderlyingError
 }
 
-func (f *FCTError) ToAPIResponseError() error {
+func (f *Error) ToAPIResponseError() error {
+	switch f.Type {
+	case ETGeneric:
+		return getAPIError(ETGeneric)
+	}
 
 	switch f.Code {
 	case CodeInvalidInput:
@@ -363,5 +335,15 @@ func (f *FCTError) ToAPIResponseError() error {
 			Code:   f.Code,
 			Detail: f.Message,
 		}
+	}
+}
+
+func getAPIError(errorType ErrorType, code Code, message string) error {
+	return APIValidationError{
+		APIError: APIError{
+			Type:   errorType.String(),
+			Code:   code,
+			Detail: message,
+		},
 	}
 }
