@@ -316,7 +316,7 @@ func (f *Error) Unwrap() error {
 func (f *Error) ToAPIResponseError() error {
 	switch f.Type {
 	case ETGeneric:
-		return getAPIError(ETGeneric)
+		return getAPIError(ETGeneric, f.Code, f.Message)
 	}
 
 	switch f.Code {
