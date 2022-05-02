@@ -22,6 +22,16 @@ func StringSliceFromAnySlice[St any](slice []St) (out []string) {
 	return
 }
 
+func SliceContains[St comparable](s []St, v St) bool {
+	for _, st := range s {
+		if st == v {
+			return true
+		}
+	}
+
+	return false
+}
+
 func MapSlice[I any, T any](input []I, transform func(item I, index int) (T, error)) ([]T, error) {
 	var result []T
 

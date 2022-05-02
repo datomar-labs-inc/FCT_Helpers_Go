@@ -22,6 +22,8 @@ func New(config *Config, logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
 		skipPaths[path] = true
 	}
 
+	logger.Logger = logger.Logger.WithOptions(zap.AddCallerSkip(1))
+
 	return func(c *fiber.Ctx) error {
 
 		// Don't log if this path is skipped
@@ -75,6 +77,8 @@ func New(config *Config, logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
 }
 
 func Recovery(logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
+	logger.Logger = logger.Logger.WithOptions(zap.AddCallerSkip(1))
+
 	return func(c *fiber.Ctx) error {
 		defer func() {
 			if err := recover(); err != nil {
