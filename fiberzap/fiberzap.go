@@ -109,7 +109,7 @@ func Recovery(logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
 
 				c.
 					Status(http.StatusInternalServerError).
-					JSON(map[string]interface{}{
+					JSON(map[string]any{
 						"error": "an unrecoverable error occured",
 					})
 			}

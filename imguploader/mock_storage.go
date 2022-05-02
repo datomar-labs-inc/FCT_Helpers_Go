@@ -17,7 +17,7 @@ func NewMockStorage() *MockStorage {
 	}
 }
 
-func (m *MockStorage) Store(ctx context.Context, key string, details *ImageDetails, reader io.Reader) error {
+func (m *MockStorage) Store(_ context.Context, _ string, _ *ImageDetails, reader io.Reader) error {
 	_, err := io.Copy(m.countedWriter, reader)
 	if err != nil {
 		return err
@@ -26,15 +26,15 @@ func (m *MockStorage) Store(ctx context.Context, key string, details *ImageDetai
 	return nil
 }
 
-func (m *MockStorage) StoreBytes(ctx context.Context, key string, details *ImageDetails, file []byte) error {
+func (m *MockStorage) StoreBytes(_ context.Context, _ string, _ *ImageDetails, _ []byte) error {
 	return nil
 }
 
-func (m *MockStorage) Read(ctx context.Context, key string) (io.ReadCloser, *ImageDetails, error) {
+func (m *MockStorage) Read(_ context.Context, _ string) (io.ReadCloser, *ImageDetails, error) {
 	return io.NopCloser(bytes.NewReader([]byte("hi there"))), nil, nil
 }
 
-func (m *MockStorage) ReadBytes(ctx context.Context, key string) ([]byte, error) {
+func (m *MockStorage) ReadBytes(_ context.Context, _ string) ([]byte, error) {
 	return []byte("hi there"), nil
 }
 

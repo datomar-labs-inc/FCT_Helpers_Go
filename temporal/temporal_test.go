@@ -1,4 +1,4 @@
-package fct_temporal
+package fcttemporal
 
 import (
 	"context"

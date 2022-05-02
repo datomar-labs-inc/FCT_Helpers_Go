@@ -1,4 +1,4 @@
-package fct_helpers
+package fcthelp
 
 import (
 	"encoding/json"
@@ -60,9 +60,9 @@ func MustMapSlice[I any, T any](input []I, transform func(item I, index int) (T,
 func NilToEmptySlice[S any](input []S) []S {
 	if input == nil {
 		return []S{}
-	} else {
-		return input
 	}
+
+	return input
 }
 
 func SliceToInterfaceSlice[I any](input []I) []any {

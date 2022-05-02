@@ -26,14 +26,14 @@ func New(opts *Opts) *ReTokenizer {
 	}
 }
 
-func (rt *ReTokenizer) KeyFunc() func(token *jwt.Token) (interface{}, error) {
-	return func(token *jwt.Token) (interface{}, error) {
+func (rt *ReTokenizer) KeyFunc() func(token *jwt.Token) (any, error) {
+	return func(token *jwt.Token) (any, error) {
 		return rt.key, nil
 	}
 }
 
-func KeyBasedKeyFunc(key []byte) func(token *jwt.Token) (interface{}, error) {
-	return func(token *jwt.Token) (interface{}, error) {
+func KeyBasedKeyFunc(key []byte) func(token *jwt.Token) (any, error) {
+	return func(token *jwt.Token) (any, error) {
 		return key, nil
 	}
 }

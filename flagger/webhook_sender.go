@@ -6,7 +6,6 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"io/ioutil"
@@ -82,7 +81,7 @@ func (ws *WebhookSender) send(url string, webhook *Webhook) ([]byte, error) {
 	}
 
 	if res.StatusCode != 200 {
-		return nil, errors.New(fmt.Sprintf("failed request (%d): %s", res.StatusCode, string(body)))
+		return nil, fmt.Errorf("failed request (%d): %s", res.StatusCode, string(body))
 	}
 
 	return body, nil

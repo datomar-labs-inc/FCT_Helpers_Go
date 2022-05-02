@@ -16,7 +16,7 @@ func Middleware(c *fiber.Ctx) error {
 		}
 
 		return c.Status(*fctErr.HTTPCode).JSON(fctErr.ToAPIResponseError())
-	} else {
-		return nil
 	}
+
+	return nil
 }

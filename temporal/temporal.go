@@ -1,4 +1,4 @@
-package fct_temporal
+package fcttemporal
 
 import (
 	"context"
@@ -58,9 +58,9 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 						// Wait after namespace registration to give temporal a chance to catch up
 						time.Sleep(1 * time.Second)
 						continue
-					} else {
-						panic(err)
 					}
+
+					panic(err)
 				}
 
 				break

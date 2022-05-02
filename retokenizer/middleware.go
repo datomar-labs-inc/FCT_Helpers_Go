@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+type ContextKey string
+
 var ErrMissingTokenMsg = fiber.Map{
 	"error": "missing token",
 }
@@ -28,7 +30,7 @@ var ErrInternalServerErrMsg = fiber.Map{
 	"error": "something went wrong",
 }
 
-var UserInfoContextKey = "__retokenizer_user_info_context_key"
+var UserInfoContextKey = ContextKey("__retokenizer_user_info_context_key")
 var DefaultAuthCacheDuration = 10 * time.Minute
 
 type MiddlewareOptions struct {
@@ -75,21 +77,21 @@ func (rt *ReTokenizer) MakeFiberMiddleware(opts *MiddlewareOptions) func(c *fibe
 		if token == "" || token == "null" {
 			if opts.IgnoreMissingTokens {
 				return c.Next()
-			} else {
-				return c.
-					Status(http.StatusUnauthorized).
-					JSON(ErrMissingTokenMsg)
 			}
+
+			return c.
+				Status(http.StatusUnauthorized).
+				JSON(ErrMissingTokenMsg)
 		}
 
 		if !strings.HasPrefix(token, "Bearer ") {
 			if opts.IgnoreInvalidTokens {
 				return c.Next()
-			} else {
-				return c.
-					Status(http.StatusUnauthorized).
-					JSON(ErrMalformedTokenMsg)
 			}
+
+			return c.
+				Status(http.StatusUnauthorized).
+				JSON(ErrMalformedTokenMsg)
 		}
 
 		token = strings.TrimSpace(strings.TrimPrefix(token, "Bearer"))
@@ -97,11 +99,11 @@ func (rt *ReTokenizer) MakeFiberMiddleware(opts *MiddlewareOptions) func(c *fibe
 		if token == "" {
 			if opts.IgnoreInvalidTokens {
 				return c.Next()
-			} else {
-				return c.
-					Status(http.StatusUnauthorized).
-					JSON(ErrMalformedTokenMsg)
 			}
+
+			return c.
+				Status(http.StatusUnauthorized).
+				JSON(ErrMalformedTokenMsg)
 		}
 
 		userInfo, err := cache.GetCachedJSONValueWithExpiry(
@@ -123,9 +125,9 @@ func (rt *ReTokenizer) MakeFiberMiddleware(opts *MiddlewareOptions) func(c *fibe
 			return c.
 				Status(http.StatusUnauthorized).
 				JSON(ErrInvalidAuthorizationMsg)
-		} else {
-			c.SetUserContext(context.WithValue(c.UserContext(), UserInfoContextKey, userInfo))
 		}
+
+		c.SetUserContext(context.WithValue(c.UserContext(), UserInfoContextKey, userInfo))
 
 		return c.Next()
 	}
@@ -137,7 +139,7 @@ func (rt *ReTokenizer) MakeFiberMiddleware(opts *MiddlewareOptions) func(c *fibe
 func ExtractUserInfo(ctx context.Context) *UserInfo {
 	if v, ok := ctx.Value(UserInfoContextKey).(*UserInfo); ok {
 		return v
-	} else {
-		return nil
 	}
+
+	return nil
 }

@@ -41,18 +41,18 @@ func GetCachedJSONValueWithExpiry[T CachedValue](ctx context.Context, cache Cach
 			return nil, ErrNilValue
 		}
 
-		newValueJsonBytes, err := json.Marshal(value)
+		newValueJSONBytes, err := json.Marshal(value)
 		if err != nil {
 			return value, err
 		}
 
 		if expiresIn != nil {
-			err = cache.StoreValueWithExpiry(ctx, key, newValueJsonBytes, *expiresIn)
+			err = cache.StoreValueWithExpiry(ctx, key, newValueJSONBytes, *expiresIn)
 			if err != nil {
 				return value, err
 			}
 		} else {
-			err = cache.StoreValue(ctx, key, newValueJsonBytes)
+			err = cache.StoreValue(ctx, key, newValueJSONBytes)
 			if err != nil {
 				return value, err
 			}

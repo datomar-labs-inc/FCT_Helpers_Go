@@ -57,7 +57,7 @@ func ValidateUserJWT[U any](key []byte, token, issuer string) (*U, error) {
 		}
 
 		return claims.User, nil
-	} else {
-		return nil, errors.New("invalid token")
 	}
+
+	return nil, errors.New("invalid token")
 }

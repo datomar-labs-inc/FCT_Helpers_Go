@@ -77,7 +77,7 @@ func (i *ImageUploader) Upload(ctx context.Context, name string, reader io.Reade
 	return details, nil
 }
 
-func (i *ImageUploader) decodeImageStream(ctx context.Context, reader io.Reader) (image.Image, *ImageDetails, error) {
+func (i *ImageUploader) decodeImageStream(_ context.Context, reader io.Reader) (image.Image, *ImageDetails, error) {
 	sniffBuffer := make([]byte, 512)
 
 	// Read the first 512 bytes of the reader

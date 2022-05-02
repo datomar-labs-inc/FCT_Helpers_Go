@@ -1,4 +1,4 @@
-package fct_temporal
+package fcttemporal
 
 import (
 	"context"
@@ -64,7 +64,7 @@ const StandardHeartbeatSpacing = 10 * time.Second
 
 // ExecuteActivity is a replacement/wrapper for Temporal's built in workflow.ExecuteActivity function, but it allows
 // for easier capturing of result values using generics
-func ExecuteActivity[T any](ctx workflow.Context, activity any, args ...interface{}) (*T, error) {
+func ExecuteActivity[T any](ctx workflow.Context, activity any, args ...any) (*T, error) {
 	var result T
 	err := workflow.ExecuteActivity(ctx, activity, args...).Get(ctx, &result)
 	if err != nil {
@@ -104,7 +104,7 @@ func ActivityCtxHB(ctx workflow.Context, timeout time.Duration, retry *temporal.
 	})
 }
 
-func ExecuteWorkflowSync[T any](ctx context.Context, temporalClient client.Client, options client.StartWorkflowOptions, workflow any, args ...interface{}) (result *T, workfowID string, runID string, err error) {
+func ExecuteWorkflowSync[T any](ctx context.Context, temporalClient client.Client, options client.StartWorkflowOptions, workflow any, args ...any) (result *T, workfowID string, runID string, err error) {
 	wfRun, err := temporalClient.ExecuteWorkflow(ctx, options, workflow, args...)
 	if err != nil {
 		return nil, "", "", err

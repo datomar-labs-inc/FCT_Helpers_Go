@@ -76,9 +76,9 @@ func Infer(err error) *Error {
 
 		if unwrapped != nil {
 			return Infer(applicationErr.Unwrap())
-		} else {
-			return New(ETTemporal, CodeUnknown, applicationErr.Error()).WithUnderlying(applicationErr)
 		}
+
+		return New(ETTemporal, CodeUnknown, applicationErr.Error()).WithUnderlying(applicationErr)
 	}
 
 	var canceledErr *temporal.CanceledError
@@ -183,9 +183,9 @@ func InferAPIError(err error) error {
 
 		if unwrapped != nil {
 			return Infer(applicationErr.Unwrap())
-		} else {
-			return New(ETTemporal, CodeUnknown, applicationErr.Error()).WithUnderlying(applicationErr)
 		}
+
+		return New(ETTemporal, CodeUnknown, applicationErr.Error()).WithUnderlying(applicationErr)
 	}
 
 	var canceledErr *temporal.CanceledError

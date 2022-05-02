@@ -1,4 +1,4 @@
-package fct_temporal
+package fcttemporal
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ type TemporalZapLogger struct {
 	logger *zap.Logger
 }
 
-func (t TemporalZapLogger) Debug(msg string, keyvals ...interface{}) {
+func (t TemporalZapLogger) Debug(msg string, keyvals ...any) {
 	if t.logger == nil {
 		return
 	}
@@ -17,7 +17,7 @@ func (t TemporalZapLogger) Debug(msg string, keyvals ...interface{}) {
 	t.logger.Debug(msg, CollectLogFields(keyvals)...)
 }
 
-func (t TemporalZapLogger) Info(msg string, keyvals ...interface{}) {
+func (t TemporalZapLogger) Info(msg string, keyvals ...any) {
 	if t.logger == nil {
 		return
 	}
@@ -25,7 +25,7 @@ func (t TemporalZapLogger) Info(msg string, keyvals ...interface{}) {
 	t.logger.Info(msg, CollectLogFields(keyvals)...)
 }
 
-func (t TemporalZapLogger) Warn(msg string, keyvals ...interface{}) {
+func (t TemporalZapLogger) Warn(msg string, keyvals ...any) {
 	if t.logger == nil {
 		return
 	}
@@ -33,7 +33,7 @@ func (t TemporalZapLogger) Warn(msg string, keyvals ...interface{}) {
 	t.logger.Warn(msg, CollectLogFields(keyvals)...)
 }
 
-func (t TemporalZapLogger) Error(msg string, keyvals ...interface{}) {
+func (t TemporalZapLogger) Error(msg string, keyvals ...any) {
 	if t.logger == nil {
 		return
 	}
@@ -41,7 +41,7 @@ func (t TemporalZapLogger) Error(msg string, keyvals ...interface{}) {
 	t.logger.Error(msg, CollectLogFields(keyvals)...)
 }
 
-func CollectLogFields(keyvals []interface{}) []zap.Field {
+func CollectLogFields(keyvals []any) []zap.Field {
 	var fields []zap.Field
 
 	for i := 0; i < len(keyvals)/2; i++ {

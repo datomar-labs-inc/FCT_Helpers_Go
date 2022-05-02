@@ -13,9 +13,9 @@ func ExtractPQError(err error) *pq.Error {
 
 	if pqErr, ok := cause.(*pq.Error); ok {
 		return pqErr
-	} else {
-		return nil
 	}
+
+	return nil
 }
 
 // RetryFromPQError extracts retry information from a postgres error

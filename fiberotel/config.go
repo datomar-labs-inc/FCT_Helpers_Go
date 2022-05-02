@@ -1,4 +1,4 @@
-package fiber_otel
+package fiberotel
 
 import (
 	"go.opentelemetry.io/otel/trace"

@@ -35,7 +35,7 @@ func (wh *WebhookHandler) processBody(ctx context.Context, body []byte, signatur
 		return nil, err
 	}
 
-	var result interface{}
+	var result any
 
 	switch webhook.Op {
 	case OpGetUserInfo:

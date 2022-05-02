@@ -36,7 +36,7 @@ func ValidateStruct(ctx context.Context, s any) error {
 	return validate.StructCtx(ctx, s)
 }
 
-func ValidateNullString(field reflect.Value) interface{} {
+func ValidateNullString(field reflect.Value) any {
 	var emptyStr *string
 
 	if s, ok := field.Interface().(null.String); ok && s.Valid {

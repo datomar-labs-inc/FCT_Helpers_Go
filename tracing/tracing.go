@@ -1,4 +1,4 @@
-package fct_tracing
+package fcttracing
 
 import (
 	"context"
