@@ -16,4 +16,5 @@ const (
 	CodeMissingArgument     = "missing_argument"
 	CodeNotFound            = "not_found"
 	CodeInvalidInput        = "invalid_input"
+	CodeGeneric             = "error_occured"
 )

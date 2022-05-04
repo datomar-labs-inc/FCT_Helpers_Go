@@ -316,7 +316,7 @@ func (f *Error) Unwrap() error {
 func (f *Error) ToAPIResponseError() error {
 	switch f.Type {
 	case ETGeneric:
-		return getAPIError(ETGeneric)
+		return getAPIError(ETGeneric, CodeGeneric, "An internal server error has occurred.")
 	}
 
 	switch f.Code {
