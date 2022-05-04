@@ -7,6 +7,8 @@ import (
 	"io"
 	"io/ioutil"
 	"mime/multipart"
+	"net/textproto"
+	"strings"
 	"sync"
 )
 
@@ -125,8 +127,52 @@ func (m *MultipartForm) AddFile(name string, filename string, value io.Reader) e
 	return nil
 }
 
+func (m *MultipartForm) AddFileExtra(name string, filename string, contentType string, value io.Reader) error {
+	m.wg.Add(1)
+
+	if !m.waitStarted {
+		m.waitStarted = true
+		m.startWait()
+	}
+
+	header := make(textproto.MIMEHeader)
+
+	header.Set("Content-Disposition",
+		fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
+			escapeQuotes(name), escapeQuotes(filename)))
+
+	header.Set("Content-Type", contentType)
+
+	m.writeMe <- func() error {
+		defer m.wg.Done()
+
+		writer, err := m.fw.CreatePart(header)
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(writer, value)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return nil
+}
+
 func (m *MultipartForm) MustAddFile(name string, filename string, value io.Reader) *MultipartForm {
 	err := m.AddFile(name, filename, value)
+	if err != nil {
+		panic(err)
+	}
+
+	return m
+}
+
+func (m *MultipartForm) MustAddFileExtra(name string, filename string, contentType string, value io.Reader) *MultipartForm {
+	err := m.AddFileExtra(name, filename, contentType, value)
 	if err != nil {
 		panic(err)
 	}
@@ -192,4 +238,10 @@ func BuildMultipartForm(stringParams [][]string, fileID string, fileBody io.Read
 	}
 
 	return form, nil
+}
+
+var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
+
+func escapeQuotes(s string) string {
+	return quoteEscaper.Replace(s)
 }
