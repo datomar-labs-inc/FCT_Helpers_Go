@@ -10,7 +10,6 @@ import (
 	tp_otel "go.temporal.io/sdk/contrib/opentelemetry"
 	"go.temporal.io/sdk/workflow"
 	"go.uber.org/zap"
-	"os"
 	"time"
 )
 
@@ -29,7 +28,7 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 
 	// First, ensure the desired namespace exists
 	nsc, err := client.NewNamespaceClient(attachTracer(client.Options{
-		HostPort: os.Getenv("TEMPORAL_HOST_PORT"),
+		HostPort: config.Endpoint,
 		Logger:   logg,
 	}))
 	if err != nil {
