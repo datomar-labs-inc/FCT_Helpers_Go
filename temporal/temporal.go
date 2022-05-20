@@ -11,6 +11,7 @@ import (
 	tp_otel "go.temporal.io/sdk/contrib/opentelemetry"
 	"go.temporal.io/sdk/workflow"
 	"go.uber.org/zap"
+	"strings"
 	"time"
 )
 
@@ -32,7 +33,7 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 
 		temporalClient, err := setupTemporal(config)
 		if err != nil {
-			if errors.Is(err, context.DeadlineExceeded) {
+			if errors.Is(err, context.DeadlineExceeded) || strings.Contains(err.Error(), "context deadline exceeded") {
 				lggr.Get("setup-temporal").Error("could not connect to temporal, retrying...", zap.Error(err))
 				time.Sleep(1 * time.Second)
 				tries++
