@@ -4,7 +4,7 @@ import (
 	"context"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zaptest"
+	"go.uber.org/zap/zapcore"
 	"testing"
 )
 
@@ -67,7 +67,16 @@ type LogWrapper struct {
 }
 
 func TestMode(t *testing.T) {
-	logger = zaptest.NewLogger(t)
+	config := zap.NewDevelopmentConfig()
+
+	config.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout("")
+
+	lg, err := config.Build()
+	if err != nil {
+		panic(err)
+	}
+
+	logger = lg
 }
 
 // Get returns a new logger wrapping the zap logger with a default event.kind of "event"
