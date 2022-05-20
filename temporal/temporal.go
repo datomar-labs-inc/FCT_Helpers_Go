@@ -3,6 +3,7 @@ package fcttemporal
 import (
 	"context"
 	lggr "github.com/datomar-labs-inc/FCT_Helpers_Go/logger"
+	"github.com/friendsofgo/errors"
 	"go.opentelemetry.io/otel"
 	"go.temporal.io/api/serviceerror"
 	"go.temporal.io/api/workflowservice/v1"
@@ -22,6 +23,30 @@ type TemporalSetupConfig struct {
 }
 
 func SetupTemporal(config *TemporalSetupConfig) client.Client {
+	tries := 0
+
+	for {
+		if tries > 5 {
+			panic("failed to connect to temporal")
+		}
+
+		temporalClient, err := setupTemporal(config)
+		if err != nil {
+			if errors.Is(err, context.DeadlineExceeded) {
+				lggr.Get("setup-temporal").Error("could not connect to temporal, retrying...", zap.Error(err))
+				time.Sleep(1 * time.Second)
+				tries++
+				continue
+			} else {
+				panic(err)
+			}
+		}
+
+		return temporalClient
+	}
+}
+
+func setupTemporal(config *TemporalSetupConfig) (client.Client, error) {
 	var logg TemporalZapLogger
 
 	temporalLogger := TemporalZapLogger{logger: lggr.Get("temporal-internal").Logger.WithOptions(zap.AddCallerSkip(1))}
@@ -32,7 +57,7 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 		Logger:   logg,
 	}))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	_, err = nsc.Describe(context.Background(), config.Namespace)
@@ -46,7 +71,7 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 				IsGlobalNamespace:                false,
 			})
 			if err != nil {
-				panic(err)
+				return nil, err
 			}
 
 			// Poll for workspace creation
@@ -59,13 +84,13 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 						continue
 					}
 
-					panic(err)
+					return nil, err
 				}
 
 				break
 			}
 		} else {
-			panic(err)
+			return nil, err
 		}
 	}
 
@@ -86,7 +111,7 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 
 	// TODO figure out how to wait for namespace creation
 
-	return temporalClient
+	return temporalClient, nil
 }
 
 func attachTracer(opts client.Options) client.Options {
