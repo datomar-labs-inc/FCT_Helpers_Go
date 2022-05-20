@@ -37,9 +37,9 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 				time.Sleep(1 * time.Second)
 				tries++
 				continue
-			} else {
-				panic(err)
 			}
+
+			panic(err)
 		}
 
 		return temporalClient
