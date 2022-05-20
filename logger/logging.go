@@ -5,7 +5,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"testing"
 )
 
 var logger *zap.Logger
@@ -66,7 +65,7 @@ type LogWrapper struct {
 	*zap.Logger
 }
 
-func TestMode(t *testing.T) {
+func TestMode() {
 	config := zap.NewDevelopmentConfig()
 
 	config.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout("")
