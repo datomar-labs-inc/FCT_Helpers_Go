@@ -21,13 +21,14 @@ type TemporalSetupConfig struct {
 	Namespace            string
 	NamespaceDescription string
 	Endpoint             string
+	ConnectRetries       int
 }
 
 func SetupTemporal(config *TemporalSetupConfig) client.Client {
 	tries := 0
 
 	for {
-		if tries > 5 {
+		if tries > config.ConnectRetries {
 			panic("failed to connect to temporal")
 		}
 
@@ -35,7 +36,7 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 		if err != nil {
 			if errors.Is(err, context.DeadlineExceeded) || strings.Contains(err.Error(), "context deadline exceeded") {
 				lggr.Get("setup-temporal").Error("could not connect to temporal, retrying...", zap.Error(err))
-				time.Sleep(1 * time.Second)
+				time.Sleep(10 * time.Second)
 				tries++
 				continue
 			}
