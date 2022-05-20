@@ -8,6 +8,7 @@ import (
 )
 
 func TestImageUploader_processImageStream(t *testing.T) {
+
 	t.Run("png", testPNG)
 	t.Run("jpg", testJpeg)
 	t.Run("gif", testGif)
@@ -15,6 +16,7 @@ func TestImageUploader_processImageStream(t *testing.T) {
 }
 
 func testPNG(t *testing.T) {
+
 	mockStorage := NewMockStorage()
 	upl := NewImageUploader(mockStorage)
 
@@ -39,6 +41,7 @@ func testPNG(t *testing.T) {
 }
 
 func testJpeg(t *testing.T) {
+
 	mockStorage := NewMockStorage()
 	upl := NewImageUploader(mockStorage)
 
@@ -63,6 +66,7 @@ func testJpeg(t *testing.T) {
 }
 
 func testGif(t *testing.T) {
+
 	mockStorage := NewMockStorage()
 	upl := NewImageUploader(mockStorage)
 
@@ -87,6 +91,7 @@ func testGif(t *testing.T) {
 }
 
 func testWebp(t *testing.T) {
+
 	mockStorage := NewMockStorage()
 	upl := NewImageUploader(mockStorage)
 

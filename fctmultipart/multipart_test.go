@@ -81,6 +81,7 @@ const UpdateFile = `{"input":{"id":"gid://shopify/ProductVariant/41078819979452"
 {"input":{"id":"gid://shopify/ProductVariant/41079347740860","price":"21.59","compareAtPrice":"21.59"}}`
 
 func TestMultipartForm(t *testing.T) {
+
 	var file [][]string
 
 	err := json.Unmarshal([]byte(fileJSON), &file)
