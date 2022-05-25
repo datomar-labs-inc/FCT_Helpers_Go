@@ -22,6 +22,11 @@ var MissingArgument = func(argName string) *Error {
 		WithHTTPCode(http.StatusBadRequest)
 }
 
+var InvalidArgument = func(argName string) *Error {
+	return New(ETValidation, CodeInvalidInput, fmt.Sprintf("invalid argument: %s", argName)).
+		WithHTTPCode(http.StatusBadRequest)
+}
+
 var NotFound = func(resourceName string) *Error {
 	return New(ETGeneric, CodeNotFound, fmt.Sprintf("could not locate resource: %s", resourceName)).
 		WithHTTPCode(http.StatusNotFound)
