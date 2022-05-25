@@ -110,3 +110,9 @@ func JSONConvert[R any](input any) (R, bool, error) {
 
 	return output, true, nil
 }
+
+type Array[T any] []T
+
+func (a *Array[T]) Push(item T) {
+	*a = append(*a, item)
+}
