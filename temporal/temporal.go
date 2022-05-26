@@ -2,6 +2,7 @@ package fcttemporal
 
 import (
 	"context"
+	"fmt"
 	lggr "github.com/datomar-labs-inc/FCT_Helpers_Go/logger"
 	"github.com/friendsofgo/errors"
 	"go.opentelemetry.io/otel"
@@ -41,7 +42,10 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 				continue
 			}
 
-			panic(err)
+			if err.Error() != "Namespace already exists." {
+				lggr.Get("setup-temporal").Error(fmt.Sprintf("temporal error: %s", err))
+				panic(err)
+			}
 		}
 
 		return temporalClient
