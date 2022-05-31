@@ -13,6 +13,7 @@ const (
 	CodeFlowFailed          = "flow_failed"
 	CodeMissingPermissions  = "missing_permissions"
 	CodeNotAuthenticated    = "not_authenticated"
+	CodeAccountDisabled     = "account_disabled"
 	CodeMissingArgument     = "missing_argument"
 	CodeNotFound            = "not_found"
 	CodeInvalidInput        = "invalid_input"

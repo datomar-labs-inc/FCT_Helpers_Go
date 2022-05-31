@@ -11,6 +11,9 @@ var AccountExists = New(ETValidation, CodeAccountExists, "that account already e
 var Unauthenticated = New(ETAuth, CodeNotAuthenticated, "no valid authentication was found").
 	WithHTTPCode(http.StatusUnauthorized)
 
+var AccountDisabled = New(ETPermissions, CodeAccountDisabled, "this account is disabled").
+	WithHTTPCode(http.StatusForbidden)
+
 var InvalidLoginDetails = New(ETAuth, CodeInvalidLoginDetails, "your login details were incorrect").
 	WithHTTPCode(http.StatusBadRequest)
 
