@@ -9,10 +9,13 @@ import (
 	"gopkg.in/go-playground/validator.v9/non-standard/validators"
 	en2 "gopkg.in/go-playground/validator.v9/translations/en"
 	"reflect"
+	"regexp"
 )
 
 var validate *validator.Validate
 var UniversalTranslator ut.Translator
+
+var simpleTextRegex *regexp.Regexp
 
 func init() {
 	ent := en.New()
@@ -24,6 +27,13 @@ func init() {
 	UniversalTranslator = trans
 
 	validate = validator.New()
+
+	err := validate.RegisterValidation("simpletext", validateSimpleText, false)
+	if err != nil {
+		panic(err)
+	}
+
+	simpleTextRegex = regexp.MustCompile("^[a-zA-Z\\s\\-.]*$")
 
 	// register all sql.Null* types to use the ValidateValuer CustomTypeFunc
 	validate.RegisterCustomTypeFunc(ValidateNullString, null.String{}, &null.String{})
@@ -48,4 +58,9 @@ func ValidateNullString(field reflect.Value) any {
 	}
 
 	return emptyStr
+}
+
+func validateSimpleText(fl validator.FieldLevel) bool {
+	str := fl.Field().String()
+	return simpleTextRegex.MatchString(str)
 }
