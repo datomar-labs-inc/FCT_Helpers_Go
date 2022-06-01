@@ -40,19 +40,19 @@ type Wrapper struct {
 func (w *Wrapper) Error() string {
 	if w.cause != nil {
 		return w.cause.Error()
-	} else {
-		return "cause: nil"
 	}
+
+	return "cause: nil"
 }
 
 func Summarize(err error) *ErrorSummary {
 	if werr, ok := err.(*Wrapper); ok {
 		return werr.Summarize()
-	} else {
-		return &ErrorSummary{
-			Cause: err.Error(),
-			Stack: []*SummaryFrame{},
-		}
+	}
+
+	return &ErrorSummary{
+		Cause: err.Error(),
+		Stack: []*SummaryFrame{},
 	}
 }
 
@@ -64,11 +64,11 @@ func (w *Wrapper) Summarize() *ErrorSummary {
 			Cause: es.Cause,
 			Stack: append([]*SummaryFrame{w.summarize()}, es.Stack...),
 		}
-	} else {
-		return &ErrorSummary{
-			Cause: w.cause.Error(),
-			Stack: []*SummaryFrame{w.summarize()},
-		}
+	}
+
+	return &ErrorSummary{
+		Cause: w.cause.Error(),
+		Stack: []*SummaryFrame{w.summarize()},
 	}
 }
 
