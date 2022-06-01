@@ -12,19 +12,19 @@ import (
 func (i *ImageUploader) FiberUploadHandler(c *fiber.Ctx) (*ImageDetails, error) {
 	file, err := c.FormFile("file")
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	f, err := file.Open()
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	defer f.Close()
 
 	details, err := i.Upload(c.UserContext(), file.Filename, f)
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	return details, nil
@@ -33,13 +33,13 @@ func (i *ImageUploader) FiberUploadHandler(c *fiber.Ctx) (*ImageDetails, error) 
 func (i *ImageUploader) FiberGetHandler(c *fiber.Ctx, key string) error {
 	reader, details, err := i.storage.Read(c.UserContext(), key)
 	if err != nil {
-		return err
+		return ferr.Wrap(err)
 	}
 
 	if details == nil || details.ConvertedMimeType == "" || details.ConvertedSizeBytes == 0 {
 		image, err := ioutil.ReadAll(reader)
 		if err != nil {
-			return err
+			return ferr.Wrap(err)
 		}
 
 		contentType := http.DetectContentType(image[:512])

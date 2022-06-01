@@ -33,7 +33,7 @@ func CreateJWTForUser[U any](key []byte, opts *CreateJWTOpts, sub string, user *
 
 	ss, err := token.SignedString(key)
 	if err != nil {
-		return "", nil, err
+		return "", nil, ferr.Wrap(err)
 	}
 
 	return ss, &claims, nil
@@ -42,7 +42,7 @@ func CreateJWTForUser[U any](key []byte, opts *CreateJWTOpts, sub string, user *
 func ValidateUserJWT[U any](key []byte, token, issuer string) (*U, error) {
 	parsedToken, err := jwt.ParseWithClaims(token, &JWTClaims[U]{}, KeyBasedKeyFunc(key), jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}))
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	if !parsedToken.Valid {

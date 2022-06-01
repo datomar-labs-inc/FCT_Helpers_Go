@@ -2,6 +2,7 @@ package fctmultipart
 
 import (
 	"fmt"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
 	lggr "github.com/datomar-labs-inc/FCT_Helpers_Go/logger"
 	"go.uber.org/zap"
 	"io"
@@ -82,7 +83,7 @@ func (m *MultipartForm) AddField(name string, value string) error {
 
 		err := m.fw.WriteField(name, value)
 		if err != nil {
-			return err
+			return ferr.Wrap(err)
 		}
 
 		return nil
@@ -113,12 +114,12 @@ func (m *MultipartForm) AddFile(name string, filename string, value io.Reader) e
 
 		writer, err := m.fw.CreateFormFile(name, filename)
 		if err != nil {
-			return err
+			return ferr.Wrap(err)
 		}
 
 		_, err = io.Copy(writer, value)
 		if err != nil {
-			return err
+			return ferr.Wrap(err)
 		}
 
 		return nil
@@ -148,12 +149,12 @@ func (m *MultipartForm) AddFileExtra(name string, filename string, contentType s
 
 		writer, err := m.fw.CreatePart(header)
 		if err != nil {
-			return err
+			return ferr.Wrap(err)
 		}
 
 		_, err = io.Copy(writer, value)
 		if err != nil {
-			return err
+			return ferr.Wrap(err)
 		}
 
 		return nil
@@ -191,7 +192,7 @@ func (m *MultipartForm) GetBytes() ([]byte, error) {
 
 	byteSlice, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	return byteSlice, nil
@@ -219,7 +220,7 @@ func (m *MultipartForm) close() error {
 		}
 	}
 
-	return err
+	return ferr.Wrap(err)
 }
 
 func BuildMultipartForm(stringParams [][]string, fileID string, fileBody io.Reader) (*MultipartForm, error) {
@@ -228,13 +229,13 @@ func BuildMultipartForm(stringParams [][]string, fileID string, fileBody io.Read
 	for _, parameter := range stringParams {
 		err := form.AddField(parameter[0], parameter[1])
 		if err != nil {
-			return nil, err
+			return nil, ferr.Wrap(err)
 		}
 	}
 
 	err := form.AddFile("file", fileID, fileBody)
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	return form, nil

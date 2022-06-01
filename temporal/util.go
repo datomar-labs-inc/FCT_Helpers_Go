@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
 	"os"
@@ -68,7 +69,7 @@ func ExecuteActivity[T any](ctx workflow.Context, activity any, args ...any) (*T
 	var result T
 	err := workflow.ExecuteActivity(ctx, activity, args...).Get(ctx, &result)
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	return &result, nil
@@ -107,7 +108,7 @@ func ActivityCtxHB(ctx workflow.Context, timeout time.Duration, retry *temporal.
 func ExecuteWorkflowSync[T any](ctx context.Context, temporalClient client.Client, options client.StartWorkflowOptions, workflow any, args ...any) (result *T, workfowID string, runID string, err error) {
 	wfRun, err := temporalClient.ExecuteWorkflow(ctx, options, workflow, args...)
 	if err != nil {
-		return nil, "", "", err
+		return nil, "", "", ferr.Wrap(err)
 	}
 
 	workfowID = wfRun.GetID()
@@ -156,14 +157,14 @@ func ParseWorkflowSingleID(id string) (workflowID string, runID string, err erro
 
 	decoded, err := base64.RawURLEncoding.DecodeString(id)
 	if err != nil {
-		return "", "", err
+		return "", "", ferr.Wrap(err)
 	}
 
 	var unmarshalled workflowRunIdentifier
 
 	err = json.Unmarshal(decoded, &unmarshalled)
 	if err != nil {
-		return "", "", err
+		return "", "", ferr.Wrap(err)
 	}
 
 	return unmarshalled.WorkflowID, unmarshalled.RunID, nil

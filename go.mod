@@ -16,6 +16,7 @@ require (
 	github.com/miolini/datacounter v1.0.3
 	github.com/stretchr/testify v1.7.0
 	github.com/volatiletech/null/v8 v8.1.2
+	github.com/ztrue/tracerr v0.3.0
 	go.opentelemetry.io/otel v1.3.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.3.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.3.0
@@ -49,6 +50,7 @@ require (
 	github.com/klauspost/compress v1.15.0 // indirect
 	github.com/klauspost/cpuid v1.2.3 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/logrusorgru/aurora v0.0.0-20181002194514-a7b3b318ed4e // indirect
 	github.com/minio/md5-simd v1.1.0 // indirect
 	github.com/minio/sha256-simd v0.1.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect

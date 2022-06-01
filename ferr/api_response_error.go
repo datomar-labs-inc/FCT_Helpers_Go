@@ -2,19 +2,38 @@ package ferr
 
 import "fmt"
 
-type APIError struct {
-	Type   string `json:"type"`
-	Code   Code   `json:"code"`
-	Detail string `json:"detail"`
+type APIErrorResponse interface {
+	Error() string
+	GetBaseError() *APIError
+	GetFullError() error
 }
 
-func (a APIError) Error() string {
+type APIError struct {
+	Type    string        `json:"type"`
+	Code    Code          `json:"code"`
+	Detail  string        `json:"detail"`
+	Summary *ErrorSummary `json:"summary,omitempty"`
+}
+
+func (a *APIError) GetBaseError() *APIError {
+	return a
+}
+
+func (a *APIError) GetFullError() error {
+	return a
+}
+
+func (a *APIError) Error() string {
 	return fmt.Sprintf("%s %s %s", a.Type, a.Code, a.Detail)
 }
 
 type APIValidationError struct {
-	APIError
+	*APIError
 	Fields []*FieldError `json:"fields"`
+}
+
+func (ave *APIValidationError) GetFullError() error {
+	return ave
 }
 
 type FieldError struct {

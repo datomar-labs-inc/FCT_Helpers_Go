@@ -30,11 +30,11 @@ func GetCachedJSONValue[T CachedValue](ctx context.Context, cache Cache, key str
 func GetCachedJSONValueWithExpiry[T CachedValue](ctx context.Context, cache Cache, key string, getVal func(ctx context.Context) (*T, error), expiresIn *time.Duration) (*T, error) {
 	jsonBytes, err := cache.RetrieveValue(ctx, key)
 	if err != nil && err != ErrCacheMiss {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	} else if err == ErrCacheMiss {
 		value, err := getVal(ctx)
 		if err != nil {
-			return nil, err
+			return nil, ferr.Wrap(err)
 		}
 
 		if isNil(value) {
@@ -43,18 +43,18 @@ func GetCachedJSONValueWithExpiry[T CachedValue](ctx context.Context, cache Cach
 
 		newValueJSONBytes, err := json.Marshal(value)
 		if err != nil {
-			return value, err
+			return value, ferr.Wrap(err)
 		}
 
 		if expiresIn != nil {
 			err = cache.StoreValueWithExpiry(ctx, key, newValueJSONBytes, *expiresIn)
 			if err != nil {
-				return value, err
+				return value, ferr.Wrap(err)
 			}
 		} else {
 			err = cache.StoreValue(ctx, key, newValueJSONBytes)
 			if err != nil {
-				return value, err
+				return value, ferr.Wrap(err)
 			}
 		}
 
@@ -64,7 +64,7 @@ func GetCachedJSONValueWithExpiry[T CachedValue](ctx context.Context, cache Cach
 
 		err := json.Unmarshal(jsonBytes, &val)
 		if err != nil {
-			return nil, err
+			return nil, ferr.Wrap(err)
 		}
 
 		return &val, nil
@@ -75,11 +75,11 @@ func GetCachedJSONValueWithExpiry[T CachedValue](ctx context.Context, cache Cach
 func GetCachedValueWithExpiry(ctx context.Context, cache Cache, key string, getVal func(ctx context.Context) ([]byte, error), expiresIn *time.Duration) ([]byte, error) {
 	valueBytes, err := cache.RetrieveValue(ctx, key)
 	if err != nil && err != ErrCacheMiss {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	} else if err == ErrCacheMiss {
 		value, err := getVal(ctx)
 		if err != nil {
-			return nil, err
+			return nil, ferr.Wrap(err)
 		}
 
 		if isNil(value) {
@@ -89,12 +89,12 @@ func GetCachedValueWithExpiry(ctx context.Context, cache Cache, key string, getV
 		if expiresIn != nil {
 			err = cache.StoreValueWithExpiry(ctx, key, value, *expiresIn)
 			if err != nil {
-				return value, err
+				return value, ferr.Wrap(err)
 			}
 		} else {
 			err = cache.StoreValue(ctx, key, value)
 			if err != nil {
-				return value, err
+				return value, ferr.Wrap(err)
 			}
 		}
 

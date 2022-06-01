@@ -258,16 +258,6 @@ func InferAPIError(err error) error {
 	}
 }
 
-// Wrap creates a new Error out of any go error, this should be used sparingly, and most errors should
-// be converted into a full Error so that the system can identify specifically what is wrong
-func Wrap(err error) *Error {
-	return &Error{
-		Message:         err.Error(),
-		Code:            CodeWrapped,
-		UnderlyingError: err,
-	}
-}
-
 // ErrorRetryInfo contains information that clients should use to determine if they should retry a request
 // and how long they should wait before retrying a request
 type ErrorRetryInfo struct {
@@ -306,44 +296,31 @@ func (f *Error) WithFieldError(ferr *FieldError) *Error {
 }
 
 func (f *Error) Error() string {
-	return fmt.Sprintf("(%d-%d) %s: %v", f.Code, f.Type, f.Message, f.UnderlyingError)
+	return fmt.Sprintf("(%s-%s) %s: %v", f.Code, f.Type, f.Message, f.UnderlyingError)
 }
 
 func (f *Error) Unwrap() error {
 	return f.UnderlyingError
 }
 
-func (f *Error) ToAPIResponseError() error {
-	switch f.Type {
-	case ETGeneric:
-		return getAPIError(ETGeneric, f.Code, f.Message)
+func (f *Error) ToAPIResponseError(withStack bool) APIErrorResponse {
+	err := &APIError{
+		Type: string(f.Type),
+		Code:   f.Code,
+		Detail: f.Message,
+	}
+
+	if withStack {
+		err.Summary = Summarize(f.UnderlyingError)
 	}
 
 	switch f.Code {
 	case CodeInvalidInput:
 		return &APIValidationError{
-			APIError: APIError{
-				Type:   "",
-				Code:   f.Code,
-				Detail: f.Message,
-			},
+			APIError: err,
 			Fields: f.Fields,
 		}
-	default:
-		return &APIError{
-			Type:   "",
-			Code:   f.Code,
-			Detail: f.Message,
-		}
 	}
-}
 
-func getAPIError(errorType ErrorType, code Code, message string) error {
-	return APIValidationError{
-		APIError: APIError{
-			Type:   errorType.String(),
-			Code:   code,
-			Detail: message,
-		},
-	}
+	return err
 }

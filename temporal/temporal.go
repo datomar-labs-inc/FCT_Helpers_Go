@@ -3,6 +3,7 @@ package fcttemporal
 import (
 	"context"
 	"fmt"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
 	lggr "github.com/datomar-labs-inc/FCT_Helpers_Go/logger"
 	"github.com/friendsofgo/errors"
 	"go.opentelemetry.io/otel"
@@ -63,7 +64,7 @@ func setupTemporal(config *TemporalSetupConfig) (client.Client, error) {
 		Logger:   logg,
 	}))
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	_, err = nsc.Describe(context.Background(), config.Namespace)
@@ -77,7 +78,7 @@ func setupTemporal(config *TemporalSetupConfig) (client.Client, error) {
 				IsGlobalNamespace:                false,
 			})
 			if err != nil {
-				return nil, err
+				return nil, ferr.Wrap(err)
 			}
 
 			// Poll for workspace creation
@@ -90,13 +91,13 @@ func setupTemporal(config *TemporalSetupConfig) (client.Client, error) {
 						continue
 					}
 
-					return nil, err
+					return nil, ferr.Wrap(err)
 				}
 
 				break
 			}
 		} else {
-			return nil, err
+			return nil, ferr.Wrap(err)
 		}
 	}
 

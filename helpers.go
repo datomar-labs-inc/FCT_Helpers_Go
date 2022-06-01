@@ -3,6 +3,7 @@ package fcthelp
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
 	"reflect"
 )
 
@@ -38,7 +39,7 @@ func MapSlice[I any, T any](input []I, transform func(item I, index int) (T, err
 	for i, inputItem := range input {
 		transformed, err := transform(inputItem, i)
 		if err != nil {
-			return nil, err
+			return nil, ferr.Wrap(err)
 		}
 
 		result = append(result, transformed)
@@ -100,12 +101,12 @@ func JSONConvert[R any](input any) (R, bool, error) {
 
 	jsb, err := json.Marshal(input)
 	if err != nil {
-		return output, false, err
+		return output, false, ferr.Wrap(err)
 	}
 
 	err = json.Unmarshal(jsb, &output)
 	if err != nil {
-		return output, false, err
+		return output, false, ferr.Wrap(err)
 	}
 
 	return output, true, nil

@@ -43,7 +43,7 @@ func (ws *WebhookSender) WithInternal(app *fiber.App) *WebhookSender {
 func (ws *WebhookSender) send(url string, webhook *Webhook) ([]byte, error) {
 	jsonBytes, err := json.Marshal(webhook)
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	hash := hmac.New(sha1.New, ws.key)
@@ -53,7 +53,7 @@ func (ws *WebhookSender) send(url string, webhook *Webhook) ([]byte, error) {
 
 	req, err := http.NewRequest("POST", strings.TrimPrefix(url, "internal://"), bytes.NewReader(jsonBytes))
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	req.Header.Add("Content-Type", "application/json")
@@ -64,12 +64,12 @@ func (ws *WebhookSender) send(url string, webhook *Webhook) ([]byte, error) {
 	if strings.HasPrefix(url, "internal://") {
 		res, err = ws.internal.Test(req)
 		if err != nil {
-			return nil, err
+			return nil, ferr.Wrap(err)
 		}
 	} else {
 		res, err = ws.client.Do(req)
 		if err != nil {
-			return nil, err
+			return nil, ferr.Wrap(err)
 		}
 	}
 
@@ -77,7 +77,7 @@ func (ws *WebhookSender) send(url string, webhook *Webhook) ([]byte, error) {
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	if res.StatusCode != 200 {
@@ -93,14 +93,14 @@ func (ws *WebhookSender) GetUserInfo(req *GetUserInfoRequest) (*GetUserInfoRespo
 		GetUserInfo: req,
 	})
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	var res GetUserInfoResponse
 
 	err = json.Unmarshal(body, &res)
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	return &res, nil
@@ -112,14 +112,14 @@ func (ws *WebhookSender) SearchUsers(req *SearchUsersRequest) (*SearchUsersRespo
 		SearchUsers: req,
 	})
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	var res SearchUsersResponse
 
 	err = json.Unmarshal(body, &res)
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	return &res, nil

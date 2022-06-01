@@ -51,7 +51,7 @@ func NewImageUploader(storage ImageUploaderStorage) *ImageUploader {
 func (i *ImageUploader) Upload(ctx context.Context, name string, reader io.Reader) (*ImageDetails, error) {
 	img, details, err := i.decodeImageStream(ctx, reader)
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	details.OriginalFileName = name
@@ -83,7 +83,7 @@ func (i *ImageUploader) decodeImageStream(_ context.Context, reader io.Reader) (
 	// Read the first 512 bytes of the reader
 	_, err := reader.Read(sniffBuffer)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, ferr.Wrap(err)
 	}
 
 	// Attempt to detect the image type
@@ -116,22 +116,22 @@ func (i *ImageUploader) decodeImageStream(_ context.Context, reader io.Reader) (
 	case FormatPNG:
 		img, err = imaging.Decode(imageSizeCounter, imaging.AutoOrientation(true))
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, ferr.Wrap(err)
 		}
 	case FormatJpeg:
 		img, err = imaging.Decode(imageSizeCounter, imaging.AutoOrientation(true))
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, ferr.Wrap(err)
 		}
 	case FormatGif:
 		img, err = imaging.Decode(imageSizeCounter, imaging.AutoOrientation(true))
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, ferr.Wrap(err)
 		}
 	case FormatWebp:
 		img, err = webp.Decode(imageSizeCounter)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, ferr.Wrap(err)
 		}
 	default:
 		return nil, nil, NewUnsupportedFormatError(mime)

@@ -2,6 +2,7 @@ package fcttracing
 
 import (
 	"context"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -21,7 +22,7 @@ func setupOpenTelemetry(ctx context.Context, serviceName string, sampler trace.S
 		semconv.ServiceNameKey.String(serviceName),
 	))
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	client := otlptracegrpc.NewClient(
@@ -31,7 +32,7 @@ func setupOpenTelemetry(ctx context.Context, serviceName string, sampler trace.S
 
 	traceExporter, err := otlptrace.New(ctx, client)
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	batchSpanProcessor := trace.NewBatchSpanProcessor(traceExporter)

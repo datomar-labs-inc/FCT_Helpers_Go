@@ -2,6 +2,7 @@ package fcttemporal
 
 import (
 	"context"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
 
 	"go.temporal.io/sdk/converter"
 	"go.temporal.io/sdk/workflow"
@@ -40,7 +41,7 @@ func (s *propagator) Inject(ctx context.Context, writer workflow.HeaderWriter) e
 	value := ctx.Value(PropagateKey)
 	payload, err := converter.GetDefaultDataConverter().ToPayload(value)
 	if err != nil {
-		return err
+		return ferr.Wrap(err)
 	}
 	writer.Set(propagationKey, payload)
 	return nil
@@ -51,7 +52,7 @@ func (s *propagator) InjectFromWorkflow(ctx workflow.Context, writer workflow.He
 	value := ctx.Value(PropagateKey)
 	payload, err := converter.GetDefaultDataConverter().ToPayload(value)
 	if err != nil {
-		return err
+		return ferr.Wrap(err)
 	}
 	writer.Set(propagationKey, payload)
 	return nil

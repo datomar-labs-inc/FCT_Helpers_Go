@@ -32,7 +32,7 @@ func (wh *WebhookHandler) processBody(ctx context.Context, body []byte, signatur
 
 	err := json.Unmarshal(body, &webhook)
 	if err != nil {
-		return nil, err
+		return nil, ferr.Wrap(err)
 	}
 
 	var result any
@@ -41,12 +41,12 @@ func (wh *WebhookHandler) processBody(ctx context.Context, body []byte, signatur
 	case OpGetUserInfo:
 		result, err = wh.webhooker.GetUserInfo(ctx, webhook.GetUserInfo)
 		if err != nil {
-			return nil, err
+			return nil, ferr.Wrap(err)
 		}
 	case OpSearchUsers:
 		result, err = wh.webhooker.SearchUsers(ctx, webhook.SearchUsers)
 		if err != nil {
-			return nil, err
+			return nil, ferr.Wrap(err)
 		}
 	default:
 		return nil, errors.New("invalid op " + webhook.Op)

@@ -20,7 +20,7 @@ func NewMockStorage() *MockStorage {
 func (m *MockStorage) Store(_ context.Context, _ string, _ *ImageDetails, reader io.Reader) error {
 	_, err := io.Copy(m.countedWriter, reader)
 	if err != nil {
-		return err
+		return ferr.Wrap(err)
 	}
 
 	return nil
