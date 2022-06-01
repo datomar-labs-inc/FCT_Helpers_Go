@@ -17,4 +17,5 @@ const (
 	CodeMissingArgument     = "missing_argument"
 	CodeNotFound            = "not_found"
 	CodeInvalidInput        = "invalid_input"
+	CodeOperationFailed     = "operation_failed"
 )
