@@ -310,7 +310,7 @@ func (f *Error) ToAPIResponseError(withStack bool) APIErrorResponse {
 		Detail: f.Message,
 	}
 
-	if withStack {
+	if withStack && f.UnderlyingError != nil {
 		err.Summary = Summarize(f.UnderlyingError)
 	}
 
