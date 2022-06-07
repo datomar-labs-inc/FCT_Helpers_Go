@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
 	"github.com/gofiber/fiber/v2"
 	"io/ioutil"
 	"net/http"

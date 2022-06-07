@@ -84,6 +84,17 @@ func ActivityCtx(ctx workflow.Context, timeout time.Duration, retry *temporal.Re
 	})
 }
 
+// ActivityCtxWithTaskQueue is a helper to create a context with workflow.ActivityOptions attached
+// The activity options will be created with a max run duration of timeout
+// The activity will be run in the given TaskQueue (for inter worker workflows)
+func ActivityCtxWithTaskQueue(ctx workflow.Context, timeout time.Duration, retry *temporal.RetryPolicy, taskQueue string) workflow.Context {
+	return workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		StartToCloseTimeout: timeout,
+		RetryPolicy:         retry,
+		TaskQueue:           taskQueue,
+	})
+}
+
 // ActivityCtxDC is a helper to create a disconnected context with workflow.ActivityOptions attached
 // The activity options will be created with a max run duration of timeout
 func ActivityCtxDC(ctx workflow.Context, timeout time.Duration) workflow.Context {
