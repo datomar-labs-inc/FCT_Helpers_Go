@@ -33,7 +33,7 @@ func init() {
 		panic(err)
 	}
 
-	simpleTextRegex = regexp.MustCompile("^[a-zA-Z\\s\\-.]*$")
+	simpleTextRegex = regexp.MustCompile("^[a-zA-Z\\s\\-._]*$")
 
 	// register all sql.Null* types to use the ValidateValuer CustomTypeFunc
 	validate.RegisterCustomTypeFunc(ValidateNullString, null.String{}, &null.String{})
