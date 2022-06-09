@@ -42,6 +42,8 @@ type MiddlewareOptions struct {
 	Logger              *lggr.LogWrapper
 }
 
+//revive:disable:cyclomatic Honestly this function is super complicated, but not worth rewriting
+// TODO this is tech debt
 func (rt *ReTokenizer) MakeFiberMiddleware(opts *MiddlewareOptions) func(c *fiber.Ctx) error {
 	if opts.Cache == nil {
 		opts.Cache = cache.NewInMemoryCache()

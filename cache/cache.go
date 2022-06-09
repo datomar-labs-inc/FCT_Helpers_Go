@@ -28,6 +28,7 @@ func GetCachedJSONValue[T CachedValue](ctx context.Context, cache Cache, key str
 }
 
 // GetCachedJSONValueWithExpiry will retrieve a value from a Cache, and parse it as json
+//revive:disable:cyclomatic Code is neat and easy to understand
 func GetCachedJSONValueWithExpiry[T CachedValue](ctx context.Context, cache Cache, key string, getVal func(ctx context.Context) (*T, error), expiresIn *time.Duration) (*T, error) {
 	jsonBytes, err := cache.RetrieveValue(ctx, key)
 	if err != nil && err != ErrCacheMiss {
@@ -74,6 +75,7 @@ func GetCachedJSONValueWithExpiry[T CachedValue](ctx context.Context, cache Cach
 
 // GetCachedValueWithExpiry will retrieve a value from a Cache, and parse it as json
 func GetCachedValueWithExpiry(ctx context.Context, cache Cache, key string, getVal func(ctx context.Context) ([]byte, error), expiresIn *time.Duration) ([]byte, error) {
+	//revive:disable:cyclomatic Code is of acceptable complexity
 	valueBytes, err := cache.RetrieveValue(ctx, key)
 	if err != nil && err != ErrCacheMiss {
 		return nil, ferr.Wrap(err)

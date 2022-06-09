@@ -34,7 +34,7 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 			panic("failed to connect to temporal")
 		}
 
-		temporalClient, err := setupTemporal(config)
+		temporalClient, err := setupTemporalInternal(config)
 		if err != nil {
 			if errors.Is(err, context.DeadlineExceeded) || strings.Contains(err.Error(), "context deadline exceeded") {
 				lggr.Get("setup-temporal").Error("could not connect to temporal, retrying...", zap.Error(err))
@@ -53,7 +53,8 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 	}
 }
 
-func setupTemporal(config *TemporalSetupConfig) (client.Client, error) {
+//revive:disable:cyclomatic This is fine
+func setupTemporalInternal(config *TemporalSetupConfig) (client.Client, error) {
 	var logg TemporalZapLogger
 
 	temporalLogger := TemporalZapLogger{logger: lggr.Get("temporal-internal").Logger.WithOptions(zap.AddCallerSkip(1))}

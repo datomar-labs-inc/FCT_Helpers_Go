@@ -16,6 +16,7 @@ type Config struct {
 	SkipPaths []string
 }
 
+//revive:disable:cyclomatic Code is relatively easy to understand, and requires a nested function for captured variables
 func New(config *Config, logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
 	skipPaths := make(map[string]bool, len(config.SkipPaths))
 	for _, path := range config.SkipPaths {

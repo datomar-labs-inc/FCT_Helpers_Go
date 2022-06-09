@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
 	"github.com/miolini/datacounter"
@@ -77,6 +78,7 @@ func (i *ImageUploader) Upload(ctx context.Context, name string, reader io.Reade
 	return details, nil
 }
 
+//revive:disable:cyclomatic This is fine
 func (i *ImageUploader) decodeImageStream(_ context.Context, reader io.Reader) (image.Image, *ImageDetails, error) {
 	sniffBuffer := make([]byte, 512)
 

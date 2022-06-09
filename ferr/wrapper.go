@@ -62,17 +62,17 @@ func (w *Wrapper) Summarize() *ErrorSummary {
 
 		return &ErrorSummary{
 			Cause: es.Cause,
-			Stack: append([]*SummaryFrame{w.summarize()}, es.Stack...),
+			Stack: append([]*SummaryFrame{w.getSummaryFrame()}, es.Stack...),
 		}
 	}
 
 	return &ErrorSummary{
 		Cause: w.cause.Error(),
-		Stack: []*SummaryFrame{w.summarize()},
+		Stack: []*SummaryFrame{w.getSummaryFrame()},
 	}
 }
 
-func (w *Wrapper) summarize() *SummaryFrame {
+func (w *Wrapper) getSummaryFrame() *SummaryFrame {
 	return &SummaryFrame{
 		WrappedFrame: w.frame,
 		message:      w.extraMessage,

@@ -46,6 +46,7 @@ func New(eType ErrorType, code Code, msg string) *Error {
 	}
 }
 
+//revive:disable:cyclomatic The nature of this function makes it thicc
 // Infer will attempt to smartly extract error information into an Error
 func Infer(err error) *Error {
 	if err == nil {
@@ -154,6 +155,8 @@ func Infer(err error) *Error {
 
 // InferAPIError will attempt to smrtley extract error information into an Error
 func InferAPIError(err error) error {
+	//revive:disable:cyclomatic The nature of this function makes it thicc
+
 	if err == nil {
 		return nil
 	}
@@ -305,7 +308,7 @@ func (f *Error) Unwrap() error {
 
 func (f *Error) ToAPIResponseError(withStack bool) APIErrorResponse {
 	err := &APIError{
-		Type: string(f.Type),
+		Type:   string(f.Type),
 		Code:   f.Code,
 		Detail: f.Message,
 	}
@@ -318,7 +321,7 @@ func (f *Error) ToAPIResponseError(withStack bool) APIErrorResponse {
 	case CodeInvalidInput:
 		return &APIValidationError{
 			APIError: err,
-			Fields: f.Fields,
+			Fields:   f.Fields,
 		}
 	}
 
