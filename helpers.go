@@ -3,8 +3,8 @@ package fcthelp
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
+	"math/rand"
 	"reflect"
 	"time"
 	"unsafe"
@@ -145,4 +145,17 @@ func RandString(n int) string {
 	}
 
 	return *(*string)(unsafe.Pointer(&b))
+}
+
+// Filter filters a slice. Any items for which the predicate returns true will be kept. Others will be discarded
+func Filter[T any](slice []T, predicate func(i T, idx int) bool) []T {
+	var filtered []T
+
+	for idx, i := range slice {
+		if predicate(i, idx) {
+			filtered = append(filtered, i)
+		}
+	}
+
+	return filtered
 }
