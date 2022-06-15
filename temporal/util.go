@@ -61,6 +61,12 @@ var (
 	}
 )
 
+var (
+	ActivityCtxSmall = func(ctx workflow.Context) workflow.Context {
+		return ActivityCtx(ctx, ActivityTimeoutS, ActivityMaxRetriesS)
+	}
+)
+
 const StandardHeartbeatSpacing = 10 * time.Second
 
 // ExecuteActivity is a replacement/wrapper for Temporal's built in workflow.ExecuteActivity function, but it allows

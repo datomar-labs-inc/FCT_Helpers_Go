@@ -25,6 +25,10 @@ var MissingArgument = func(argName string) *Error {
 		WithHTTPCode(http.StatusBadRequest)
 }
 
+var ResourceTimedOut = func(timedOutResource string) *Error {
+	return New(ETGeneric, CodeTimeout, fmt.Sprintf("resource timed out: %s", timedOutResource)).WithHTTPCode(http.StatusInternalServerError)
+}
+
 var InvalidArgument = func(argName string) *Error {
 	return New(ETValidation, CodeInvalidInput, fmt.Sprintf("invalid argument: %s", argName)).
 		WithHTTPCode(http.StatusBadRequest)
