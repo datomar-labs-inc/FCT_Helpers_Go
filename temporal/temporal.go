@@ -20,10 +20,11 @@ import (
 var temporalClient client.Client
 
 type TemporalSetupConfig struct {
-	Namespace            string
-	NamespaceDescription string
-	Endpoint             string
-	ConnectRetries       int
+	Namespace             string
+	NamespaceDescription  string
+	Endpoint              string
+	SkipNamespaceCreation bool
+	ConnectRetries        int
 }
 
 func SetupTemporal(config *TemporalSetupConfig) client.Client {
@@ -59,51 +60,53 @@ func setupTemporalInternal(config *TemporalSetupConfig) (client.Client, error) {
 
 	temporalLogger := TemporalZapLogger{logger: lggr.Get("temporal-internal").Logger.WithOptions(zap.AddCallerSkip(1))}
 
-	// First, ensure the desired namespace exists
-	nsc, err := client.NewNamespaceClient(attachTracer(client.Options{
-		HostPort: config.Endpoint,
-		Logger:   logg,
-	}))
-	if err != nil {
-		return nil, ferr.Wrap(err)
-	}
+	if !config.SkipNamespaceCreation {
+		// First, ensure the desired namespace exists
+		nsc, err := client.NewNamespaceClient(attachTracer(client.Options{
+			HostPort: config.Endpoint,
+			Logger:   logg,
+		}))
+		if err != nil {
+			return nil, ferr.Wrap(err)
+		}
 
-	_, err = nsc.Describe(context.Background(), config.Namespace)
-	if err != nil {
-		if _, ok := err.(*serviceerror.NotFound); ok {
-			// Need to create namespace
-			err = nsc.Register(context.Background(), &workflowservice.RegisterNamespaceRequest{
-				Namespace:                        config.Namespace,
-				Description:                      config.NamespaceDescription,
-				WorkflowExecutionRetentionPeriod: DurPtr(24 * 7 * time.Hour), // Save workflow execution logs for 1 week
-				IsGlobalNamespace:                false,
-			})
-			if err != nil {
-				return nil, ferr.Wrap(err)
-			}
-
-			// Poll for workspace creation
-			for {
-				_, err = nsc.Describe(context.Background(), config.Namespace)
+		_, err = nsc.Describe(context.Background(), config.Namespace)
+		if err != nil {
+			if _, ok := err.(*serviceerror.NotFound); ok {
+				// Need to create namespace
+				err = nsc.Register(context.Background(), &workflowservice.RegisterNamespaceRequest{
+					Namespace:                        config.Namespace,
+					Description:                      config.NamespaceDescription,
+					WorkflowExecutionRetentionPeriod: DurPtr(24 * 7 * time.Hour), // Save workflow execution logs for 1 week
+					IsGlobalNamespace:                false,
+				})
 				if err != nil {
-					if _, ok := err.(*serviceerror.NotFound); ok {
-						// Wait after namespace registration to give temporal a chance to catch up
-						time.Sleep(1 * time.Second)
-						continue
-					}
-
 					return nil, ferr.Wrap(err)
 				}
 
-				break
-			}
-		} else {
-			return nil, ferr.Wrap(err)
-		}
-	}
+				// Poll for workspace creation
+				for {
+					_, err = nsc.Describe(context.Background(), config.Namespace)
+					if err != nil {
+						if _, ok := err.(*serviceerror.NotFound); ok {
+							// Wait after namespace registration to give temporal a chance to catch up
+							time.Sleep(1 * time.Second)
+							continue
+						}
 
-	// Close the namespace client, it is no longer needed
-	nsc.Close()
+						return nil, ferr.Wrap(err)
+					}
+
+					break
+				}
+			} else {
+				return nil, ferr.Wrap(err)
+			}
+		}
+
+		// Close the namespace client, it is no longer needed
+		nsc.Close()
+	}
 
 	c, err := client.NewClient(attachTracer(client.Options{
 		HostPort:           config.Endpoint,
