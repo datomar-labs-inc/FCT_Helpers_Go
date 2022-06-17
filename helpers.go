@@ -66,6 +66,50 @@ func Map[I any, T any](input []I, transform func(item I, index int) T) []T {
 	})
 }
 
+type KV[K comparable, V any] struct {
+	K K
+	V V
+}
+
+func MapToSlice[K comparable, V any](m map[K]V) (kv []KV[K, V]) {
+	for k, v := range m {
+		kv = append(kv, KV[K, V]{
+			K: k,
+			V: v,
+		})
+	}
+
+	return
+}
+
+func FilterMap[I any, O any](input []I, fm func(item I, idx int) *O) (outSlice []*O) {
+	for idx, item := range input {
+		output := fm(item, idx)
+
+		if !IsNil(output) {
+			outSlice = append(outSlice, output)
+		}
+	}
+
+	return
+}
+
+func MapValues[K comparable, V any](m map[K]V) (vals []V) {
+	for _, v := range m {
+		vals = append(vals, v)
+	}
+
+	return
+}
+
+func MapKeys[K comparable, V any](m map[K]V) (keys []K) {
+	for k, _ := range m {
+		keys = append(keys, k)
+	}
+
+	return
+}
+
 // NilToEmptySlice replaces a nil value with an empty slice of type S, otherwise returns the value unchanged
 func NilToEmptySlice[S any](input []S) []S {
 	if input == nil {
