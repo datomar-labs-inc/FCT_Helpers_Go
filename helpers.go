@@ -60,6 +60,12 @@ func MustMapSlice[I any, T any](input []I, transform func(item I, index int) (T,
 	return result
 }
 
+func Map[I any, T any](input []I, transform func(item I, index int) T) []T {
+	return MustMapSlice(input, func(item I, index int) (T, error) {
+		return transform(item, index), nil
+	})
+}
+
 // NilToEmptySlice replaces a nil value with an empty slice of type S, otherwise returns the value unchanged
 func NilToEmptySlice[S any](input []S) []S {
 	if input == nil {
