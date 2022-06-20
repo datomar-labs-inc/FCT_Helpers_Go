@@ -3,6 +3,7 @@ package fiberotel
 import (
 	"bytes"
 	"fmt"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
 	"go.opentelemetry.io/otel/attribute"
 	"text/template"
 

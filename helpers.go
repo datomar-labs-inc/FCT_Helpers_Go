@@ -82,9 +82,24 @@ func MapToSlice[K comparable, V any](m map[K]V) (kv []KV[K, V]) {
 	return
 }
 
-func FilterMap[I any, O any](input []I, fm func(item I, idx int) *O) (outSlice []*O) {
+func MustFilterMap[I any, O any](input []I, fm func(item I, idx int) *O) (outSlice []*O) {
 	for idx, item := range input {
 		output := fm(item, idx)
+
+		if !IsNil(output) {
+			outSlice = append(outSlice, output)
+		}
+	}
+
+	return
+}
+
+func FilterMap[I any, O any](input []I, fm func(item I, idx int) (*O, error)) (outSlice []*O, err error) {
+	for idx, item := range input {
+		output, err := fm(item, idx)
+		if err != nil {
+			return nil, err
+		}
 
 		if !IsNil(output) {
 			outSlice = append(outSlice, output)
