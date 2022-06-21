@@ -118,7 +118,7 @@ func MapValues[K comparable, V any](m map[K]V) (vals []V) {
 }
 
 func MapKeys[K comparable, V any](m map[K]V) (keys []K) {
-	for k, _ := range m {
+	for k := range m {
 		keys = append(keys, k)
 	}
 
