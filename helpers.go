@@ -234,3 +234,14 @@ func Find[T any](slice []T, predicate func(i T, idx int) bool) *T {
 
 	return nil
 }
+
+func FindPtr[T any](slice []*T, predicate func(i *T, idx int) bool) *T {
+	for idx, i := range slice {
+		if predicate(i, idx) {
+			return i
+		}
+	}
+
+	return nil
+}
+
