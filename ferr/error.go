@@ -1,6 +1,7 @@
 package ferr
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr/valid"
@@ -53,8 +54,22 @@ func Infer(err error) *Error {
 		return nil
 	}
 
-	if fctErr, ok := err.(*Error); ok {
+	var fctErr *Error
+	if errors.As(err, &fctErr) {
 		return fctErr
+	}
+
+	// Check if it's a sql no rows error
+	if err == sql.ErrNoRows {
+		httpCode :=- http.StatusNotFound
+
+		return &Error{
+			Message:         "The requested resource could not be found",
+			Type:            ETGeneric,
+			Code:            CodeNotFound,
+			HTTPCode:        &httpCode,
+			UnderlyingError: err,
+		}
 	}
 
 	// Check if it's a postgres error

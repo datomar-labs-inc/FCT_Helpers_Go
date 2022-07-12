@@ -98,7 +98,7 @@ func FilterMap[I any, O any](input []I, fm func(item I, idx int) (*O, error)) (o
 	for idx, item := range input {
 		output, err := fm(item, idx)
 		if err != nil {
-			return nil, err
+			return nil, ferr.Wrap(err)
 		}
 
 		if !IsNil(output) {

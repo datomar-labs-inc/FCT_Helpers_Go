@@ -45,6 +45,10 @@ func (w *Wrapper) Error() string {
 	return "cause: nil"
 }
 
+func (w *Wrapper) Unwrap() error {
+	return w.cause
+}
+
 func Summarize(err error) *ErrorSummary {
 	if werr, ok := err.(*Wrapper); ok {
 		return werr.Summarize()
