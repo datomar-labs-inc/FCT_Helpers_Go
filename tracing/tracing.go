@@ -3,6 +3,8 @@ package fcttracing
 import (
 	"context"
 	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
+	lggr "github.com/datomar-labs-inc/FCT_Helpers_Go/logger"
+	"github.com/go-logr/zapr"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -13,11 +15,11 @@ import (
 	"os"
 )
 
-func SetupTracing(serviceName string, sampler trace.Sampler) (closer func() error, err error) {
-	return setupOpenTelemetry(context.Background(), serviceName, sampler)
+func SetupTracing(serviceName string, logger *lggr.LogWrapper, sampler trace.Sampler) (closer func() error, err error) {
+	return setupOpenTelemetry(context.Background(), serviceName, sampler, logger)
 }
 
-func setupOpenTelemetry(ctx context.Context, serviceName string, sampler trace.Sampler) (func() error, error) {
+func setupOpenTelemetry(ctx context.Context, serviceName string, sampler trace.Sampler, logger *lggr.LogWrapper) (func() error, error) {
 	res, err := resource.New(ctx, resource.WithAttributes(
 		semconv.ServiceNameKey.String(serviceName),
 	))
@@ -45,6 +47,7 @@ func setupOpenTelemetry(ctx context.Context, serviceName string, sampler trace.S
 
 	otel.SetTracerProvider(traceProvider)
 	otel.SetTextMapPropagator(propagation.TraceContext{})
+	otel.SetLogger(zapr.NewLogger(logger.Logger))
 
 	// Return a shutdown handler
 	return func() error {

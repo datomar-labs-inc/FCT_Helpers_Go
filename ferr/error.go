@@ -60,8 +60,8 @@ func Infer(err error) *Error {
 	}
 
 	// Check if it's a sql no rows error
-	if err == sql.ErrNoRows {
-		httpCode :=- http.StatusNotFound
+	if errors.Is(err, sql.ErrNoRows) {
+		httpCode := http.StatusNotFound
 
 		return &Error{
 			Message:         "The requested resource could not be found",
