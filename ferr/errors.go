@@ -17,8 +17,14 @@ var AccountDisabled = New(ETPermissions, CodeAccountDisabled, "this account is d
 var InvalidLoginDetails = New(ETAuth, CodeInvalidLoginDetails, "your login details were incorrect").
 	WithHTTPCode(http.StatusBadRequest)
 
-var MissingPermissions = New(ETPermissions, CodeMissingPermissions, "you do not have the required permissions for this action").
-	WithHTTPCode(http.StatusForbidden)
+var MissingPermissions = func(permissions ...string) error {
+	err := New(ETPermissions, CodeMissingPermissions, "you do not have the required permissions for this action").
+		WithHTTPCode(http.StatusForbidden)
+
+	err.Detail = permissions
+
+	return WrapWithOffset(err, 2)
+}
 
 var MissingArgument = func(argName string) *Error {
 	return New(ETValidation, CodeMissingArgument, fmt.Sprintf("missing required argument: %s", argName)).
