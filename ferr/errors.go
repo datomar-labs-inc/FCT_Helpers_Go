@@ -29,12 +29,32 @@ var ResourceTimedOut = func(timedOutResource string) *Error {
 	return New(ETGeneric, CodeTimeout, fmt.Sprintf("resource timed out: %s", timedOutResource)).WithHTTPCode(http.StatusInternalServerError)
 }
 
-var InvalidArgument = func(argName string) *Error {
-	return New(ETValidation, CodeInvalidInput, fmt.Sprintf("invalid argument: %s", argName)).
+var InvalidArgument = func(resourceType string, reason ...string) error {
+	err := New(ETValidation, CodeInvalidInput, fmt.Sprintf("invalid argument: %s, with reasons: %+v", resourceType, reason)).
 		WithHTTPCode(http.StatusBadRequest)
+
+	err.ResourceType = &resourceType
+	err.Detail = reason
+
+	return WrapWithOffset(err, 2)
 }
 
-var NotFound = func(resourceName string) *Error {
-	return New(ETGeneric, CodeNotFound, fmt.Sprintf("could not locate resource: %s", resourceName)).
+var NotFound = func(resourceType string, detail ...string) error {
+	err := New(ETGeneric, CodeNotFound, fmt.Sprintf("could not locate resource: %s, with ids: %+v", resourceType, detail)).
 		WithHTTPCode(http.StatusNotFound)
+
+	err.ResourceType = &resourceType
+	err.Detail = detail
+
+	return WrapWithOffset(err, 2)
+}
+
+var InternalServerError = func(resourceType string, detail ...string) error {
+	err := New(ETGeneric, CodeUnknown, fmt.Sprintf("internal server error: %s, detail: %+v", resourceType, detail)).
+		WithHTTPCode(http.StatusInternalServerError)
+
+	err.ResourceType = &resourceType
+	err.Detail = detail
+
+	return WrapWithOffset(err, 2)
 }

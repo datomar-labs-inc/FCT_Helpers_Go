@@ -26,6 +26,12 @@ type Error struct {
 	// Source is a developer readable string that indicates where the error originated
 	Source string `json:"source"`
 
+	// ResourceType is the type of resource that caused the error. example: Account, Accessory
+	ResourceType *string `json:"resource_type,omitempty"`
+
+	// Detail contains a list of ids that can be used to identify what resource caused the error
+	Detail []string `json:"resource_identifiers"`
+
 	// HTTPCode is an optional code that indicates what http status code this error represents
 	HTTPCode *int `json:"http_code,omitempty"`
 

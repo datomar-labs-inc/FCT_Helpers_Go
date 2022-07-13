@@ -21,9 +21,12 @@ func ExtractPQError(err error) *pq.Error {
 // RetryFromPQError extracts retry information from a postgres error
 // this function will decide if the error is retry-able, and for how long it should wait before retrying
 func RetryFromPQError(err *pq.Error) *ErrorRetryInfo {
-	// TODO add more logic
-
 	switch err.Code.Name() {
+	case "unique_violation", "foreign_key_violation", "not_null_violation":
+		return &ErrorRetryInfo{
+			ShouldRetry: false,
+		}
+
 	default:
 		return &ErrorRetryInfo{
 			ShouldRetry: true,
@@ -34,14 +37,33 @@ func RetryFromPQError(err *pq.Error) *ErrorRetryInfo {
 
 // HTTPCodeFromPQError extracts an http code from a postgres error
 func HTTPCodeFromPQError(err *pq.Error) *int {
-	// TODO add more logic
-
 	code := http.StatusInternalServerError
 
 	switch err.Code.Name() {
+	case "unique_violation", "not_null_violation":
+		code = http.StatusBadRequest
 	default:
 		code = http.StatusInternalServerError
 	}
 
 	return &code
+}
+
+// HandlePostgresError will attempt to convert dbErr into a postgres error, and then reason about it
+func HandlePostgresError(dbErr error) error {
+	pqErr := ExtractPQError(dbErr)
+
+	if pqErr == nil {
+		return dbErr
+	}
+
+	return &Error{
+		Message:         pqErr.Message,
+		Type:            ETDatabase,
+		Code:            CodeUnknown,
+		ResourceType:    &pqErr.Table,
+		HTTPCode:        HTTPCodeFromPQError(pqErr),
+		Retry:           RetryFromPQError(pqErr),
+		UnderlyingError: dbErr,
+	}
 }
