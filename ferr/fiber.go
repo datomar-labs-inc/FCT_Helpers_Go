@@ -28,7 +28,7 @@ func Middleware(withStack bool) func(c *fiber.Ctx) error {
 
 			err := c.Next()
 			if err != nil {
-				extractedError = Infer(extractedError)
+				extractedError = Infer(err)
 			}
 		}()
 

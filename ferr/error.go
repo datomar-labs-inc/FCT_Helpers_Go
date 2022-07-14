@@ -82,14 +82,8 @@ func Infer(err error) *Error {
 	pqErr := ExtractPQError(err)
 
 	if pqErr != nil {
-		return &Error{
-			Message:         pqErr.Message,
-			Type:            ETDatabase,
-			Code:            CodeUnknown,
-			HTTPCode:        HTTPCodeFromPQError(pqErr),
-			Retry:           RetryFromPQError(pqErr),
-			UnderlyingError: err,
-		}
+		// Error is guaranteed to be a *Error as long as pqErr is not nil
+		return HandlePostgresError(err).(*Error)
 	}
 
 	var applicationErr *temporal.ApplicationError
