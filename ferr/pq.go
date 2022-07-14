@@ -39,6 +39,8 @@ func HTTPCodeFromPQError(err *pq.Error) *int {
 	code := http.StatusInternalServerError
 
 	switch err.Code.Name() {
+	case "unique_violation":
+		code = http.StatusBadRequest
 	default:
 		code = http.StatusInternalServerError
 	}
