@@ -22,11 +22,6 @@ func ExtractPQError(err error) *pq.Error {
 // this function will decide if the error is retry-able, and for how long it should wait before retrying
 func RetryFromPQError(err *pq.Error) *ErrorRetryInfo {
 	switch err.Code.Name() {
-	case "unique_violation", "foreign_key_violation", "not_null_violation":
-		return &ErrorRetryInfo{
-			ShouldRetry: false,
-		}
-
 	default:
 		return &ErrorRetryInfo{
 			ShouldRetry: true,
