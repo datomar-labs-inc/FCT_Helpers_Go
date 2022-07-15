@@ -45,6 +45,16 @@ var InvalidArgument = func(resourceType string, reason ...string) error {
 	return WrapWithOffset(err, 2)
 }
 
+var InvalidAction = func(resourceType string, reason ...string) error {
+	err := New(ETValidation, CodeInvalidAction, fmt.Sprintf("invalid action: %s, with reasons: %+v", resourceType, reason)).
+		WithHTTPCode(http.StatusBadRequest)
+
+	err.ResourceType = &resourceType
+	err.Detail = reason
+
+	return WrapWithOffset(err, 2)
+}
+
 var NotFound = func(resourceType string, detail ...string) error {
 	err := New(ETGeneric, CodeNotFound, fmt.Sprintf("could not locate resource: %s, with ids: %+v", resourceType, detail)).
 		WithHTTPCode(http.StatusNotFound)
