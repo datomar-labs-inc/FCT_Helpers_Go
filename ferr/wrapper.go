@@ -39,7 +39,7 @@ type Wrapper struct {
 
 func (w *Wrapper) Error() string {
 	if w.cause != nil {
-		return w.cause.Error()
+		return w.Summarize().String()
 	}
 
 	return "cause: nil"
