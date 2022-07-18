@@ -73,7 +73,7 @@ func New(config *Config, logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
 			logger.Info(path, fields...)
 		}
 
-		return nil
+		return err
 	}
 }
 
