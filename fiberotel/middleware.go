@@ -71,7 +71,11 @@ func New(config ...Config) fiber.Handler {
 		span.SetAttributes(attrs...)
 		span.SetStatus(spanStatus, spanMessage)
 
-		return ferr.Wrap(err)
+		if err != nil {
+			return ferr.Wrap(err)
+		} else {
+			return nil
+		}
 	}
 }
 

@@ -3,6 +3,7 @@ package imguploader
 import (
 	"bytes"
 	"context"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
 	"github.com/minio/minio-go/v6"
 	"io"
 	"io/ioutil"

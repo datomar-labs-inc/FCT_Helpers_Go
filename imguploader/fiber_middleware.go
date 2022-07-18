@@ -2,6 +2,7 @@ package imguploader
 
 import (
 	"fmt"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
 	lggr "github.com/datomar-labs-inc/FCT_Helpers_Go/logger"
 	"github.com/gofiber/fiber/v2"
 	"io"

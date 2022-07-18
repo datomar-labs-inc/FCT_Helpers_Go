@@ -74,8 +74,14 @@ func (w *Wrapper) Summarize() *ErrorSummary {
 		}
 	}
 
+	var cause string
+
+	if w.Cause() != nil {
+		cause = w.Cause().Error()
+	}
+
 	return &ErrorSummary{
-		Cause: w.cause.Error(),
+		Cause: cause,
 		Stack: []*SummaryFrame{w.getSummaryFrame()},
 	}
 }
@@ -131,7 +137,11 @@ func WrapWithOffset(err error, offset int) *Wrapper {
 }
 
 func Wrap(err error) *Wrapper {
-	return WrapWithOffset(err, 1)
+	if err != nil {
+		return WrapWithOffset(err, 1)
+	} else {
+		return nil
+	}
 }
 
 func Wrapf(err error, message string, args ...any) *Wrapper {
