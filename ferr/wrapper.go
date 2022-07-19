@@ -139,9 +139,8 @@ func WrapWithOffset(err error, offset int) *Wrapper {
 func Wrap(err error) *Wrapper {
 	if err != nil {
 		return WrapWithOffset(err, 1)
-	} else {
-		return nil
 	}
+	return nil
 }
 
 func Wrapf(err error, message string, args ...any) *Wrapper {

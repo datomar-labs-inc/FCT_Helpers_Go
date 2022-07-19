@@ -73,9 +73,9 @@ func New(config ...Config) fiber.Handler {
 
 		if err != nil {
 			return ferr.Wrap(err)
-		} else {
-			return nil
 		}
+
+		return nil
 	}
 }
 
