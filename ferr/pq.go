@@ -35,7 +35,7 @@ func HTTPCodeFromPQError(err *pq.Error) *int {
 	code := http.StatusInternalServerError
 
 	switch err.Code.Name() {
-	case "unique_violation", "not_null_violation":
+	case "unique_violation", "not_null_violation", "integrity_constraint_violation":
 		code = http.StatusBadRequest
 	default:
 		code = http.StatusInternalServerError
@@ -50,6 +50,20 @@ func HandlePostgresError(dbErr error) error {
 
 	if pqErr == nil {
 		return dbErr
+	}
+
+	// For the year triggers
+	if pqErr.Message == "product_line_different_year" {
+		return &Error{
+			Message:         "Product Line has a different year than the Product.",
+			Type:            ETValidation,
+			Code:            CodeInvalidInput,
+			ResourceType:    &pqErr.Table,
+			Detail:          []string{pqErr.Message},
+			HTTPCode:        HTTPCodeFromPQError(pqErr),
+			Retry:           RetryFromPQError(pqErr),
+			UnderlyingError: dbErr,
+		}
 	}
 
 	return &Error{

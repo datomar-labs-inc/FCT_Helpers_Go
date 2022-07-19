@@ -97,9 +97,9 @@ func Infer(err error) *Error {
 		return New(ETTemporal, CodeUnknown, applicationErr.Error()).WithUnderlying(applicationErr)
 	}
 
-	var canceledErr *temporal.CanceledError
-	if errors.As(err, &canceledErr) {
-		return New(ETTemporal, CodeUnknown, canceledErr.Error()).WithUnderlying(canceledErr)
+	var cancelledErr *temporal.CanceledError
+	if errors.As(err, &cancelledErr) {
+		return New(ETTemporal, CodeUnknown, cancelledErr.Error()).WithUnderlying(cancelledErr)
 	}
 
 	var timeoutErr *temporal.TimeoutError
