@@ -24,17 +24,6 @@ func New(config *Config) func(c *fiber.Ctx) error {
 	}
 
 	return func(c *fiber.Ctx) error {
-
-		var logger *lggr.LogWrapper
-
-		logger = lggr.FromContext(c.UserContext())
-
-		if logger == nil {
-			logger = lggr.GetDetached("request-logging")
-		}
-
-		logger = logger.WithCallerSkip(1)
-
 		// Don't log if this path is skipped
 		if _, ok := skipPaths[c.Path()]; ok {
 			return c.Next()
@@ -45,6 +34,16 @@ func New(config *Config) func(c *fiber.Ctx) error {
 		query := string(c.Request().URI().QueryString())
 
 		err := c.Next()
+
+		var log *lggr.LogWrapper
+
+		log = lggr.FromContext(c.UserContext())
+
+		if log == nil {
+			log = lggr.GetDetached("request-logging")
+		}
+
+		log = log.WithCallerSkip(1)
 
 		var fields []zapcore.Field
 
@@ -74,11 +73,11 @@ func New(config *Config) func(c *fiber.Ctx) error {
 		)
 
 		if c.Response().StatusCode() >= 400 && c.Response().StatusCode() < 500 {
-			logger.Warn(path, fields...)
+			log.Warn(path, fields...)
 		} else if c.Response().StatusCode() >= 500 && c.Response().StatusCode() < 600 {
-			logger.Error(path, fields...)
+			log.Error(path, fields...)
 		} else {
-			logger.Info(path, fields...)
+			log.Info(path, fields...)
 		}
 
 		return err
