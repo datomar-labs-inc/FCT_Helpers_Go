@@ -11,13 +11,14 @@ import (
 var logger *LogWrapper
 
 type Kind string
+type ContextKeyType string
 
 const (
 	KindEvent = Kind("event")
 	KindState = Kind("state")
 )
 
-const ContextKey = "__lggr.log_wrapper"
+const ContextKey = ContextKeyType("__lggr.log_wrapper")
 
 type Category string
 

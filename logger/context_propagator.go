@@ -7,13 +7,13 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func NewContextPropagator() *lggrContextPropagator {
-	return &lggrContextPropagator{}
+func NewContextPropagator() *ContextPropogator {
+	return &ContextPropogator{}
 }
 
-type lggrContextPropagator struct {}
+type ContextPropogator struct {}
 
-func (l *lggrContextPropagator) Inject(ctx context.Context, writer workflow.HeaderWriter) error {
+func (l *ContextPropogator) Inject(ctx context.Context, writer workflow.HeaderWriter) error {
 	lw := FromContext(ctx)
 
 	if lw != nil {
@@ -33,7 +33,7 @@ func (l *lggrContextPropagator) Inject(ctx context.Context, writer workflow.Head
 	return nil
 }
 
-func (l *lggrContextPropagator) Extract(ctx context.Context, reader workflow.HeaderReader) (context.Context, error) {
+func (l *ContextPropogator) Extract(ctx context.Context, reader workflow.HeaderReader) (context.Context, error) {
 	if pl, ok := reader.Get(ContextKey); ok {
 		var lggr LogWrapper
 
@@ -48,7 +48,7 @@ func (l *lggrContextPropagator) Extract(ctx context.Context, reader workflow.Hea
 	return ctx, nil
 }
 
-func (l *lggrContextPropagator) InjectFromWorkflow(context workflow.Context, writer workflow.HeaderWriter) error {
+func (l *ContextPropogator) InjectFromWorkflow(context workflow.Context, writer workflow.HeaderWriter) error {
 	lw, ok := context.Value(ContextKey).(*LogWrapper)
 
 	if ok && lw != nil {
@@ -68,7 +68,7 @@ func (l *lggrContextPropagator) InjectFromWorkflow(context workflow.Context, wri
 	return nil
 }
 
-func (l *lggrContextPropagator) ExtractToWorkflow(ctx workflow.Context, reader workflow.HeaderReader) (workflow.Context, error) {
+func (l *ContextPropogator) ExtractToWorkflow(ctx workflow.Context, reader workflow.HeaderReader) (workflow.Context, error) {
 	if pl, ok := reader.Get(ContextKey); ok {
 		var lggr LogWrapper
 
