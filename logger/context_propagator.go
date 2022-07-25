@@ -27,14 +27,14 @@ func (l *ContextPropogator) Inject(ctx context.Context, writer workflow.HeaderWr
 			return err
 		}
 
-		writer.Set(ContextKey, pl)
+		writer.Set(string(ContextKey), pl)
 	}
 
 	return nil
 }
 
 func (l *ContextPropogator) Extract(ctx context.Context, reader workflow.HeaderReader) (context.Context, error) {
-	if pl, ok := reader.Get(ContextKey); ok {
+	if pl, ok := reader.Get(string(ContextKey)); ok {
 		var lggr LogWrapper
 
 		err := json.Unmarshal(pl.Data, &lggr)
@@ -62,14 +62,14 @@ func (l *ContextPropogator) InjectFromWorkflow(context workflow.Context, writer 
 			return err
 		}
 
-		writer.Set(ContextKey, pl)
+		writer.Set(string(ContextKey), pl)
 	}
 
 	return nil
 }
 
 func (l *ContextPropogator) ExtractToWorkflow(ctx workflow.Context, reader workflow.HeaderReader) (workflow.Context, error) {
-	if pl, ok := reader.Get(ContextKey); ok {
+	if pl, ok := reader.Get(string(ContextKey)); ok {
 		var lggr LogWrapper
 
 		err := lggr.UnmarshalJSONSpecial(pl.Data)
