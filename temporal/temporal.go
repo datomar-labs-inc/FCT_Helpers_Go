@@ -38,14 +38,14 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 		temporalClient, err := setupTemporalInternal(config)
 		if err != nil {
 			if errors.Is(err, context.DeadlineExceeded) || strings.Contains(err.Error(), "context deadline exceeded") {
-				lggr.Get("setup-temporal").Error("could not connect to temporal, retrying...", zap.Error(err))
+				lggr.GetDetached("setup-temporal").Error("could not connect to temporal, retrying...", zap.Error(err))
 				time.Sleep(10 * time.Second)
 				tries++
 				continue
 			}
 
 			if err.Error() != "Namespace already exists." {
-				lggr.Get("setup-temporal").Error(fmt.Sprintf("temporal error: %s", err))
+				lggr.GetDetached("setup-temporal").Error(fmt.Sprintf("temporal error: %s", err))
 				panic(err)
 			}
 		}
@@ -58,7 +58,7 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 func setupTemporalInternal(config *TemporalSetupConfig) (client.Client, error) {
 	var logg TemporalZapLogger
 
-	temporalLogger := TemporalZapLogger{logger: lggr.Get("temporal-internal").Logger.WithOptions(zap.AddCallerSkip(1))}
+	temporalLogger := TemporalZapLogger{logger: lggr.GetDetached("temporal-internal").WithCallerSkip(1)}
 
 	if !config.SkipNamespaceCreation {
 		// First, ensure the desired namespace exists
@@ -111,7 +111,7 @@ func setupTemporalInternal(config *TemporalSetupConfig) (client.Client, error) {
 	c, err := client.NewClient(attachTracer(client.Options{
 		HostPort:           config.Endpoint,
 		Namespace:          config.Namespace,
-		ContextPropagators: []workflow.ContextPropagator{NewContextPropagator()},
+		ContextPropagators: []workflow.ContextPropagator{lggr.NewContextPropagator()},
 		Logger:             temporalLogger,
 	}))
 	if err != nil {

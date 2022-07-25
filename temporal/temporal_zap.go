@@ -2,11 +2,12 @@ package fcttemporal
 
 import (
 	"fmt"
+	lggr "github.com/datomar-labs-inc/FCT_Helpers_Go/logger"
 	"go.uber.org/zap"
 )
 
 type TemporalZapLogger struct {
-	logger *zap.Logger
+	logger *lggr.LogWrapper
 }
 
 func (t TemporalZapLogger) Debug(msg string, keyvals ...any) {

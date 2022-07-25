@@ -47,7 +47,7 @@ func (m *MultipartForm) startWait() {
 				if writeFn != nil {
 					err := writeFn()
 					if err != nil {
-						lggr.Get("multipart-write").Error("failed to write to multipart form body", zap.Error(err))
+						lggr.GetDetached("multipart-write").Error("failed to write to multipart form body", zap.Error(err))
 					}
 				}
 

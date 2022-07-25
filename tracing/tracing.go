@@ -47,7 +47,7 @@ func setupOpenTelemetry(ctx context.Context, serviceName string, sampler trace.S
 
 	otel.SetTracerProvider(traceProvider)
 	otel.SetTextMapPropagator(propagation.TraceContext{})
-	otel.SetLogger(zapr.NewLogger(logger.Logger))
+	otel.SetLogger(zapr.NewLogger(logger.GetInternalZapLogger()))
 
 	// Return a shutdown handler
 	return func() error {

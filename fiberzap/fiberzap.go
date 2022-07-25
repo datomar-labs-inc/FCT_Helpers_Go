@@ -17,15 +17,23 @@ type Config struct {
 }
 
 //revive:disable:cyclomatic Code is relatively easy to understand, and requires a nested function for captured variables
-func New(config *Config, logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
+func New(config *Config) func(c *fiber.Ctx) error {
 	skipPaths := make(map[string]bool, len(config.SkipPaths))
 	for _, path := range config.SkipPaths {
 		skipPaths[path] = true
 	}
 
-	logger.Logger = logger.Logger.WithOptions(zap.AddCallerSkip(1))
-
 	return func(c *fiber.Ctx) error {
+
+		var logger *lggr.LogWrapper
+
+		logger = lggr.FromContext(c.UserContext())
+
+		if logger == nil {
+			logger = lggr.GetDetached("request-logging")
+		}
+
+		logger = logger.WithCallerSkip(1)
 
 		// Don't log if this path is skipped
 		if _, ok := skipPaths[c.Path()]; ok {
@@ -77,10 +85,18 @@ func New(config *Config, logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
 	}
 }
 
-func Recovery(logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
-	logger.Logger = logger.Logger.WithOptions(zap.AddCallerSkip(1))
-
+func Recovery() func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
+		var logger *lggr.LogWrapper
+
+		logger = lggr.FromContext(c.UserContext(), "request-recovery")
+
+		if logger == nil {
+			logger = lggr.GetDetached("recovery-logging")
+		}
+
+		logger = logger.WithCallerSkip(1)
+
 		defer func() {
 			if err := recover(); err != nil {
 				// Check for a broken connection, as it is not really a
