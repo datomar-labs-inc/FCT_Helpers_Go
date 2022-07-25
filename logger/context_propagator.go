@@ -72,7 +72,7 @@ func (l *lggrContextPropagator) ExtractToWorkflow(ctx workflow.Context, reader w
 	if pl, ok := reader.Get(ContextKey); ok {
 		var lggr LogWrapper
 
-		err := json.Unmarshal(pl.Data, &lggr)
+		err := lggr.UnmarshalJSONSpecial(pl.Data)
 		if err != nil {
 			return ctx, err
 		}
