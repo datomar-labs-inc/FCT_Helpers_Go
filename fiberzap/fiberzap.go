@@ -17,16 +17,13 @@ type Config struct {
 }
 
 //revive:disable:cyclomatic Code is relatively easy to understand, and requires a nested function for captured variables
-func New(config *Config, logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
+func New(config *Config) func(c *fiber.Ctx) error {
 	skipPaths := make(map[string]bool, len(config.SkipPaths))
 	for _, path := range config.SkipPaths {
 		skipPaths[path] = true
 	}
 
-	logger.Logger = logger.Logger.WithOptions(zap.AddCallerSkip(1))
-
 	return func(c *fiber.Ctx) error {
-
 		// Don't log if this path is skipped
 		if _, ok := skipPaths[c.Path()]; ok {
 			return c.Next()
@@ -37,6 +34,16 @@ func New(config *Config, logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
 		query := string(c.Request().URI().QueryString())
 
 		err := c.Next()
+
+		var log *lggr.LogWrapper
+
+		log = lggr.FromContext(c.UserContext())
+
+		if log == nil {
+			log = lggr.GetDetached("request-logging")
+		}
+
+		log = log.WithCallerSkip(1)
 
 		var fields []zapcore.Field
 
@@ -66,21 +73,29 @@ func New(config *Config, logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
 		)
 
 		if c.Response().StatusCode() >= 400 && c.Response().StatusCode() < 500 {
-			logger.Warn(path, fields...)
+			log.Warn(path, fields...)
 		} else if c.Response().StatusCode() >= 500 && c.Response().StatusCode() < 600 {
-			logger.Error(path, fields...)
+			log.Error(path, fields...)
 		} else {
-			logger.Info(path, fields...)
+			log.Info(path, fields...)
 		}
 
 		return err
 	}
 }
 
-func Recovery(logger *lggr.LogWrapper) func(c *fiber.Ctx) error {
-	logger.Logger = logger.Logger.WithOptions(zap.AddCallerSkip(1))
-
+func Recovery() func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
+		var logger *lggr.LogWrapper
+
+		logger = lggr.FromContext(c.UserContext(), "request-recovery")
+
+		if logger == nil {
+			logger = lggr.GetDetached("recovery-logging")
+		}
+
+		logger = logger.WithCallerSkip(1)
+
 		defer func() {
 			if err := recover(); err != nil {
 				// Check for a broken connection, as it is not really a

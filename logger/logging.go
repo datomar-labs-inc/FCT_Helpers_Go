@@ -8,14 +8,17 @@ import (
 	"testing"
 )
 
-var logger *zap.Logger
+var logger *LogWrapper
 
 type Kind string
+type ContextKeyType string
 
 const (
 	KindEvent = Kind("event")
 	KindState = Kind("state")
 )
+
+const ContextKey = ContextKeyType("__lggr.log_wrapper")
 
 type Category string
 
@@ -59,39 +62,52 @@ func init() {
 		panic(err)
 	}
 
-	logger = lg
+	logger = &LogWrapper{
+		log: lg,
+	}
 }
 
 type LogWrapper struct {
-	*zap.Logger
+	CallerSkip     int         `json:"caller_skip"`
+	DetachedFields []zap.Field `json:"detached_fields"`
+	log            *zap.Logger
 }
 
 func TestMode(t *testing.T) {
-	logger = zaptest.NewLogger(t)
+	logger = &LogWrapper{log: zaptest.NewLogger(t)}
 }
 
-// Get returns a new logger wrapping the zap logger with a default event.kind of "event"
+// GetDetached returns a new logger wrapping the zap logger with a default event.kind of "event"
 // action should be string describing the action being performed
 // https://www.elastic.co/guide/en/ecs/current/ecs-event.html#field-event-action
-func Get(action string) *LogWrapper {
-	return &LogWrapper{
-		Logger: logger.With(zap.String("event.kind", string(KindEvent))).With(zap.String("event.action", action)).
-			WithOptions(zap.AddCallerSkip(1)),
-	}
+func GetDetached(action string) *LogWrapper {
+	return logger.With(zap.String("event.kind", string(KindEvent))).With(zap.String("event.action", action)).
+		WithCallerSkip(1)
 }
 
-// NewWith returns a new LogWrapper with the provided fields, this is intended to be used as a fresh logger and should not be used to directly
-// log messages
-func NewWith(fields ...zap.Field) *LogWrapper {
-	return &LogWrapper{
-		Logger: logger.With(fields...),
+func FromContext(ctx context.Context, action ...string) *LogWrapper {
+	if lggr, ok := ctx.Value(ContextKey).(*LogWrapper); ok {
+
+		if len(action) > 0 {
+			return lggr.With(zap.String("event.action", action[0]))
+		}
+
+		return lggr
 	}
+
+	return nil
+}
+
+func (log *LogWrapper) GetInternalZapLogger() *zap.Logger {
+	return log.log
+}
+
+func (log *LogWrapper) AttachToContext(parent context.Context) context.Context {
+	return context.WithValue(parent, ContextKey, log)
 }
 
 func (log *LogWrapper) Get(action string) *LogWrapper {
-	return &LogWrapper{
-		Logger: log.Logger.With(zap.String("event.kind", string(KindEvent))).With(zap.String("event.action", action)),
-	}
+	return log.With(zap.String("event.kind", string(KindEvent))).With(zap.String("event.action", action))
 }
 
 // Ctx will attach a context to the logger, it will also attach tracing information
@@ -100,11 +116,11 @@ func (log *LogWrapper) Ctx(ctx context.Context) *LogWrapper {
 
 	if sc.IsValid() {
 		if sc.HasSpanID() {
-			log.Logger = log.Logger.With(zap.String("span.id", sc.SpanID().String()))
+			log.AddFields(zap.String("span.id", sc.SpanID().String()))
 		}
 
 		if sc.HasTraceID() {
-			log.Logger = log.Logger.With(zap.String("trace.id", sc.TraceID().String()))
+			log.AddFields(zap.String("trace.id", sc.TraceID().String()))
 		}
 	}
 
@@ -113,24 +129,23 @@ func (log *LogWrapper) Ctx(ctx context.Context) *LogWrapper {
 
 // StateKind overrides the event.kind field, and sets it to state
 func (log *LogWrapper) StateKind() *LogWrapper {
-	log.Logger = log.Logger.With(zap.String("event.kind", string(KindState)))
+	log.AddFields(zap.String("event.kind", string(KindState)))
 	return log
 }
 
 func (log *LogWrapper) Category(c Category) *LogWrapper {
-	log.Logger = log.Logger.With(zap.String("event.category", string(c)))
+	log.AddFields(zap.String("event.category", string(c)))
 
 	return log
 }
 
 func (log *LogWrapper) Span(span trace.Span) *LogWrapper {
 	if span.SpanContext().HasSpanID() {
-		//logger = logger.With(zap.String("transaction.id", span.SpanContext().SpanID().String()))
-		log.Logger = log.Logger.With(zap.String("span.id", span.SpanContext().SpanID().String()))
+		log.AddFields(zap.String("span.id", span.SpanContext().SpanID().String()))
 	}
 
 	if span.SpanContext().HasTraceID() {
-		log.Logger = log.Logger.With(zap.String("trace.id", span.SpanContext().TraceID().String()))
+		log.AddFields(zap.String("trace.id", span.SpanContext().TraceID().String()))
 	}
 
 	return log
@@ -139,25 +154,25 @@ func (log *LogWrapper) Span(span trace.Span) *LogWrapper {
 // Info logs a message at InfoLevel. The message includes any fields passed
 // at the log site, as well as any fields accumulated on the logger.
 func (log *LogWrapper) Info(msg string, fields ...zap.Field) {
-	log.With(zap.Int("event.severity", 1)).Info(msg, fields...)
+	log.With(zap.Int("event.severity", 1)).log.Info(msg, fields...)
 }
 
 // Debug logs a message at DebugLevel. The message includes any fields passed
 // at the log site, as well as any fields accumulated on the logger.
 func (log *LogWrapper) Debug(msg string, fields ...zap.Field) {
-	log.With(zap.Int("event.severity", 0)).Debug(msg, fields...)
+	log.With(zap.Int("event.severity", 0)).log.Debug(msg, fields...)
 }
 
 // Warn logs a message at WarnLevel. The message includes any fields passed
 // at the log site, as well as any fields accumulated on the logger.
 func (log *LogWrapper) Warn(msg string, fields ...zap.Field) {
-	log.With(zap.Int("event.severity", 5)).Warn(msg, fields...)
+	log.With(zap.Int("event.severity", 5)).log.Warn(msg, fields...)
 }
 
 // Error logs a message at ErrorLevel. The message includes any fields passed
 // at the log site, as well as any fields accumulated on the logger.
 func (log *LogWrapper) Error(msg string, fields ...zap.Field) {
-	log.With(zap.Int("event.severity", 10)).Error(msg, fields...)
+	log.With(zap.Int("event.severity", 10)).log.Error(msg, fields...)
 }
 
 // Panic logs a message at PanicLevel. The message includes any fields passed
@@ -165,7 +180,7 @@ func (log *LogWrapper) Error(msg string, fields ...zap.Field) {
 //
 // The logger then panics, even if logging at PanicLevel is disabled.
 func (log *LogWrapper) Panic(msg string, fields ...zap.Field) {
-	log.With(zap.Int("event.severity", 15)).Panic(msg, fields...)
+	log.With(zap.Int("event.severity", 15)).log.Panic(msg, fields...)
 }
 
 // Fatal logs a message at FatalLevel. The message includes any fields passed
@@ -174,14 +189,14 @@ func (log *LogWrapper) Panic(msg string, fields ...zap.Field) {
 // The logger then calls os.Exit(1), even if logging at FatalLevel is
 // disabled.
 func (log *LogWrapper) Fatal(msg string, fields ...zap.Field) {
-	log.With(zap.Int("event.severity", 20)).Fatal(msg, fields...)
+	log.With(zap.Int("event.severity", 20)).log.Fatal(msg, fields...)
 }
 
 // Critical logs a message at ErrorLevel. The message includes any fields passed
 // at the log site, as well as any fields accumulated on the logger.
 // Critical will also set a very high event.severity (for elastic)
 func (log *LogWrapper) Critical(msg string, fields ...zap.Field) {
-	log.With(zap.Int("event.severity", 50)).Error(msg, fields...)
+	log.With(zap.Int("event.severity", 50)).log.Error(msg, fields...)
 }
 
 // CriticalPanic logs a message at PanicLevel. The message includes any fields passed
@@ -190,7 +205,7 @@ func (log *LogWrapper) Critical(msg string, fields ...zap.Field) {
 // The logger then panics, even if logging at PanicLevel is disabled.
 // CriticalPanic will also set a very high event.severity (for elastic)
 func (log *LogWrapper) CriticalPanic(msg string, fields ...zap.Field) {
-	log.With(zap.Int("event.severity", 55)).Panic(msg, fields...)
+	log.With(zap.Int("event.severity", 55)).log.Panic(msg, fields...)
 }
 
 // CriticalFatal logs a message at FatalLevel. The message includes any fields passed
@@ -200,5 +215,40 @@ func (log *LogWrapper) CriticalPanic(msg string, fields ...zap.Field) {
 // disabled.
 // CriticalFatal will also set a very high event.severity (for elastic)
 func (log *LogWrapper) CriticalFatal(msg string, fields ...zap.Field) {
-	log.With(zap.Int("event.severity", 60)).Fatal(msg, fields...)
+	log.With(zap.Int("event.severity", 60)).log.Fatal(msg, fields...)
+}
+
+func (log *LogWrapper) AddFields(fields ...zap.Field) *LogWrapper {
+	log.DetachedFields = append(log.DetachedFields, fields...)
+	log.log = log.log.With(fields...)
+	return log
+}
+
+func (log *LogWrapper) With(fields ...zap.Field) *LogWrapper {
+	newLog := &LogWrapper{
+		log: logger.log,
+	}
+
+	newLog = newLog.AddFields(log.DetachedFields...)
+	newLog = newLog.AddFields(fields...)
+	newLog = newLog.WithCallerSkip(log.CallerSkip)
+
+	return newLog
+}
+
+func (log *LogWrapper) WithCallerSkip(n int) *LogWrapper {
+	newLog := &LogWrapper{
+		CallerSkip:     log.CallerSkip,
+		log:            logger.log,
+	}
+
+	newLog = newLog.AddFields(log.DetachedFields...)
+	newLog.log = newLog.log.WithOptions(zap.AddCallerSkip(n))
+	newLog.CallerSkip += n
+
+	return newLog
+}
+
+func (log *LogWrapper) Sync() error {
+	return log.log.Sync()
 }
