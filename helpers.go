@@ -60,9 +60,15 @@ func MustMapSlice[I any, T any](input []I, transform func(item I, index int) (T,
 	return result
 }
 
-func Map[I any, T any](input []I, transform func(item I, index int) T) []T {
+func MapI[I any, T any](input []I, transform func(item I, index int) T) []T {
 	return MustMapSlice(input, func(item I, index int) (T, error) {
 		return transform(item, index), nil
+	})
+}
+
+func Map[I any, T any](input []I, transform func(item I) T) []T {
+	return MustMapSlice(input, func(item I, index int) (T, error) {
+		return transform(item), nil
 	})
 }
 
@@ -243,5 +249,21 @@ func FindPtr[T any](slice []*T, predicate func(i *T, idx int) bool) *T {
 	}
 
 	return nil
+}
+
+func FindSliceDiff[T comparable](a []T, b []T) (added []T, removed []T) {
+	for _, t := range a {
+		if !SliceContains(b, t) {
+			removed = append(removed, t)
+		}
+	}
+
+	for _, t := range b {
+		if !SliceContains(a, t) {
+			added = append(added, t)
+		}
+	}
+
+	return
 }
 
