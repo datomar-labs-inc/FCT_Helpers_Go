@@ -43,7 +43,7 @@ func New(config *Config) func(c *fiber.Ctx) error {
 			log = lggr.GetDetached("request-logging")
 		}
 
-		log = log.WithCallerSkip(1)
+		log = log.WithCallerSkip(2)
 
 		var fields []zapcore.Field
 

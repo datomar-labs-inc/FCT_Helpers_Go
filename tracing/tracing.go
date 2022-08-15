@@ -16,10 +16,14 @@ import (
 )
 
 func SetupTracing(serviceName string, logger *lggr.LogWrapper, sampler trace.Sampler) (closer func() error, err error) {
-	return setupOpenTelemetry(context.Background(), serviceName, sampler, logger)
+	return setupOpenTelemetry(context.Background(), serviceName, sampler, logger, nil)
 }
 
-func setupOpenTelemetry(ctx context.Context, serviceName string, sampler trace.Sampler, logger *lggr.LogWrapper) (func() error, error) {
+func SetupTracingWithCustomSpanProcessor(serviceName string, logger *lggr.LogWrapper, sampler trace.Sampler, customSpanProcessor trace.SpanProcessor) (closer func() error, err error) {
+	return setupOpenTelemetry(context.Background(), serviceName, sampler, logger, customSpanProcessor)
+}
+
+func setupOpenTelemetry(ctx context.Context, serviceName string, sampler trace.Sampler, logger *lggr.LogWrapper, customSpanProcessor trace.SpanProcessor) (func() error, error) {
 	res, err := resource.New(ctx, resource.WithAttributes(
 		semconv.ServiceNameKey.String(serviceName),
 	))
@@ -37,12 +41,14 @@ func setupOpenTelemetry(ctx context.Context, serviceName string, sampler trace.S
 		return nil, ferr.Wrap(err)
 	}
 
-	batchSpanProcessor := trace.NewBatchSpanProcessor(traceExporter)
+	if customSpanProcessor == nil {
+		customSpanProcessor = trace.NewBatchSpanProcessor(traceExporter)
+	}
 
 	traceProvider := trace.NewTracerProvider(
 		trace.WithSampler(sampler),
 		trace.WithResource(res),
-		trace.WithSpanProcessor(batchSpanProcessor),
+		trace.WithSpanProcessor(customSpanProcessor),
 	)
 
 	otel.SetTracerProvider(traceProvider)

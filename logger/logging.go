@@ -71,6 +71,7 @@ type LogWrapper struct {
 	CallerSkip     int         `json:"caller_skip"`
 	DetachedFields []zap.Field `json:"detached_fields"`
 	log            *zap.Logger
+	ctx            context.Context
 }
 
 func TestMode(t *testing.T) {
@@ -92,6 +93,8 @@ func FromContext(ctx context.Context, action ...string) *LogWrapper {
 			return lggr.With(zap.String("event.action", action[0]))
 		}
 
+		lggr.ctx = ctx
+
 		return lggr
 	}
 
@@ -103,7 +106,9 @@ func (log *LogWrapper) GetInternalZapLogger() *zap.Logger {
 }
 
 func (log *LogWrapper) AttachToContext(parent context.Context) context.Context {
-	return context.WithValue(parent, ContextKey, log)
+	ctx := context.WithValue(parent, ContextKey, log)
+	log.ctx = ctx
+	return ctx
 }
 
 func (log *LogWrapper) Get(action string) *LogWrapper {
@@ -155,24 +160,36 @@ func (log *LogWrapper) Span(span trace.Span) *LogWrapper {
 // at the log site, as well as any fields accumulated on the logger.
 func (log *LogWrapper) Info(msg string, fields ...zap.Field) {
 	log.With(zap.Int("event.severity", 1)).log.Info(msg, fields...)
+	for _, hook := range hooks {
+		hook.Info(log.ctx, msg, fields...)
+	}
 }
 
 // Debug logs a message at DebugLevel. The message includes any fields passed
 // at the log site, as well as any fields accumulated on the logger.
 func (log *LogWrapper) Debug(msg string, fields ...zap.Field) {
 	log.With(zap.Int("event.severity", 0)).log.Debug(msg, fields...)
+	for _, hook := range hooks {
+		hook.Debug(log.ctx, msg, fields...)
+	}
 }
 
 // Warn logs a message at WarnLevel. The message includes any fields passed
 // at the log site, as well as any fields accumulated on the logger.
 func (log *LogWrapper) Warn(msg string, fields ...zap.Field) {
 	log.With(zap.Int("event.severity", 5)).log.Warn(msg, fields...)
+	for _, hook := range hooks {
+		hook.Warn(log.ctx, msg, fields...)
+	}
 }
 
 // Error logs a message at ErrorLevel. The message includes any fields passed
 // at the log site, as well as any fields accumulated on the logger.
 func (log *LogWrapper) Error(msg string, fields ...zap.Field) {
 	log.With(zap.Int("event.severity", 10)).log.Error(msg, fields...)
+	for _, hook := range hooks {
+		hook.Error(log.ctx, msg, fields...)
+	}
 }
 
 // Panic logs a message at PanicLevel. The message includes any fields passed
@@ -180,6 +197,9 @@ func (log *LogWrapper) Error(msg string, fields ...zap.Field) {
 //
 // The logger then panics, even if logging at PanicLevel is disabled.
 func (log *LogWrapper) Panic(msg string, fields ...zap.Field) {
+	for _, hook := range hooks {
+		hook.Panic(log.ctx, msg, fields...)
+	}
 	log.With(zap.Int("event.severity", 15)).log.Panic(msg, fields...)
 }
 
@@ -189,6 +209,9 @@ func (log *LogWrapper) Panic(msg string, fields ...zap.Field) {
 // The logger then calls os.Exit(1), even if logging at FatalLevel is
 // disabled.
 func (log *LogWrapper) Fatal(msg string, fields ...zap.Field) {
+	for _, hook := range hooks {
+		hook.Fatal(log.ctx, msg, fields...)
+	}
 	log.With(zap.Int("event.severity", 20)).log.Fatal(msg, fields...)
 }
 
@@ -197,6 +220,9 @@ func (log *LogWrapper) Fatal(msg string, fields ...zap.Field) {
 // Critical will also set a very high event.severity (for elastic)
 func (log *LogWrapper) Critical(msg string, fields ...zap.Field) {
 	log.With(zap.Int("event.severity", 50)).log.Error(msg, fields...)
+	for _, hook := range hooks {
+		hook.Critical(log.ctx, msg, fields...)
+	}
 }
 
 // CriticalPanic logs a message at PanicLevel. The message includes any fields passed
@@ -205,6 +231,9 @@ func (log *LogWrapper) Critical(msg string, fields ...zap.Field) {
 // The logger then panics, even if logging at PanicLevel is disabled.
 // CriticalPanic will also set a very high event.severity (for elastic)
 func (log *LogWrapper) CriticalPanic(msg string, fields ...zap.Field) {
+	for _, hook := range hooks {
+		hook.CriticalPanic(log.ctx, msg, fields...)
+	}
 	log.With(zap.Int("event.severity", 55)).log.Panic(msg, fields...)
 }
 
@@ -215,6 +244,9 @@ func (log *LogWrapper) CriticalPanic(msg string, fields ...zap.Field) {
 // disabled.
 // CriticalFatal will also set a very high event.severity (for elastic)
 func (log *LogWrapper) CriticalFatal(msg string, fields ...zap.Field) {
+	for _, hook := range hooks {
+		hook.CriticalFatal(log.ctx, msg, fields...)
+	}
 	log.With(zap.Int("event.severity", 60)).log.Fatal(msg, fields...)
 }
 
@@ -238,8 +270,8 @@ func (log *LogWrapper) With(fields ...zap.Field) *LogWrapper {
 
 func (log *LogWrapper) WithCallerSkip(n int) *LogWrapper {
 	newLog := &LogWrapper{
-		CallerSkip:     log.CallerSkip,
-		log:            logger.log,
+		CallerSkip: log.CallerSkip,
+		log:        logger.log,
 	}
 
 	newLog = newLog.AddFields(log.DetachedFields...)
