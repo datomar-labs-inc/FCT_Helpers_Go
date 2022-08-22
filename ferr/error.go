@@ -80,7 +80,6 @@ func Infer(err error) *Error {
 
 	// Check if it's a postgres error
 	pqErr := ExtractPQError(err)
-
 	if pqErr != nil {
 		// Error is guaranteed to be a *Error as long as pqErr is not nil
 		return HandlePostgresError(err).(*Error)

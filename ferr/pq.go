@@ -1,9 +1,12 @@
 package ferr
 
 import (
+	"fmt"
+	fcthelp "github.com/datomar-labs-inc/FCT_Helpers_Go"
 	"github.com/friendsofgo/errors"
 	"github.com/lib/pq"
 	"net/http"
+	"strings"
 )
 
 // ExtractPQError will attempt to turn an error into a pq.Error
@@ -64,10 +67,18 @@ func HandlePostgresError(dbErr error) error {
 			Retry:           RetryFromPQError(pqErr),
 			UnderlyingError: dbErr,
 		}
+	} else if strings.Contains(pqErr.Message, "invalid input syntax for type uuid") {
+		return &Error{
+			Message:      "Invalid ID Specified",
+			Type:         ETValidation,
+			Code:         CodeInvalidInput,
+			ResourceType: &pqErr.Table,
+			HTTPCode:     fcthelp.ToPtr(http.StatusBadRequest),
+		}
 	}
 
 	return &Error{
-		Message:         pqErr.Message,
+		Message:         fmt.Sprintf("(%s) %s", pqErr.Code, pqErr.Message),
 		Type:            ETDatabase,
 		Code:            CodeUnknown,
 		ResourceType:    &pqErr.Table,
