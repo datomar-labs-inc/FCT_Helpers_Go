@@ -1,9 +1,11 @@
 package fcthelp
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
+	"github.com/friendsofgo/errors"
 	"math/rand"
 	"reflect"
 	"time"
@@ -267,3 +269,27 @@ func FindSliceDiff[T comparable](a []T, b []T) (added []T, removed []T) {
 	return
 }
 
+func WaitForSomethingToHappen(ctx context.Context, timeoutSeconds int, checker func() (bool, error)) error {
+	startTime := time.Now()
+	for {
+		deadline, deadlineExists := ctx.Deadline()
+		if deadlineExists {
+			if time.Now().After(deadline) {
+				return errors.New("timeout")
+			}
+		}
+
+		if time.Now().After(startTime.Add(time.Second * time.Duration(timeoutSeconds))) {
+			return errors.New("timeout")
+		}
+
+		exists, err := checker()
+		if err != nil {
+			return err
+		}
+
+		if exists {
+			return nil
+		}
+	}
+}
