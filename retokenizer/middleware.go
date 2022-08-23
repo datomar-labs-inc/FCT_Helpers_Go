@@ -62,7 +62,7 @@ func (rt *ReTokenizer) MakeFiberMiddleware(opts *MiddlewareOptions) func(c *fibe
 	if opts.Logger != nil {
 		logger = opts.Logger
 	} else {
-		logger = lggr.Get("retokenizer-middleware")
+		logger = lggr.GetDetached("retokenizer-middleware")
 	}
 
 	return func(c *fiber.Ctx) error {

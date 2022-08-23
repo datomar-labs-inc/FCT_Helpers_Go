@@ -150,8 +150,6 @@ func MustGetWorkflowSingleID(workflowID, runID string) string {
 
 	if workflowID == "" {
 		panic("empty workflow id")
-	} else if runID == "" {
-		panic("empty run id")
 	}
 
 	marshalled, err := json.Marshal(workflowRunIdentifier{
