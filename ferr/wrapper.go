@@ -11,6 +11,10 @@ type ErrorSummary struct {
 }
 
 func (es *ErrorSummary) String() string {
+	if es == nil {
+		return "nil"
+	}
+
 	str := fmt.Sprintf("cause: %s\n", es.Cause)
 
 	for _, frame := range es.Stack {
