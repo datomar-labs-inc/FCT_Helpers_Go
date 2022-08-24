@@ -46,7 +46,7 @@ func (w *Future[T]) Finalize() {
 	w.Finalized = true
 }
 
-func (w *Future[T]) FinalizeTyped(data *T) {
+func (w *Future[T]) FinalizeWithData(data *T) {
 	w.Finalized = true
 	w.Data = data
 }
