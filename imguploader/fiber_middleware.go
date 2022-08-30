@@ -63,7 +63,7 @@ func (i *ImageUploader) FiberGetHandler(c *fiber.Ctx, key string) error {
 
 	_, err = io.Copy(c.Response().BodyWriter(), reader)
 	if err != nil {
-		lggr.Get("upload-image").Warn("failed to send body")
+		lggr.GetDetached("upload-image").Warn("failed to send body")
 	}
 
 	return nil
