@@ -78,6 +78,18 @@ func HandlePostgresError(dbErr error) error {
 		}
 	}
 
+	if pqErr.Message == "create_validation_error" {
+		br := http.StatusBadRequest
+
+		return &Error{
+			Message:      fmt.Sprintf("%s: %s", pqErr.Message, pqErr.Constraint),
+			Type:         ETValidation,
+			Code:         CodeInvalidInput,
+			ResourceType: &pqErr.Table,
+			HTTPCode:     &br,
+		}
+	}
+
 	return &Error{
 		Message:         fmt.Sprintf("(%s) %s", pqErr.Code, pqErr.Message),
 		Type:            ETDatabase,
