@@ -82,7 +82,7 @@ func TestMode(t *testing.T) {
 // action should be string describing the action being performed
 // https://www.elastic.co/guide/en/ecs/current/ecs-event.html#field-event-action
 func GetDetached(action string) *LogWrapper {
-	return logger.With(zap.String("event.kind", string(KindEvent))).With(zap.String("event.action", action)).
+	return logger.With(zap.String("event.kind", string(KindEvent)), zap.Namespace("_app_data")).With(zap.String("event.action", action)).
 		WithCallerSkip(1)
 }
 
@@ -90,7 +90,7 @@ func FromContext(ctx context.Context, action ...string) *LogWrapper {
 	if lggr, ok := ctx.Value(ContextKey).(*LogWrapper); ok {
 
 		if len(action) > 0 {
-			return lggr.With(zap.String("event.action", action[0]))
+			return lggr.With(zap.String("event.action", action[0]), zap.Namespace("_app_data"))
 		}
 
 		lggr.ctx = ctx
