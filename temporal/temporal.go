@@ -44,7 +44,7 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 				continue
 			}
 
-			if err.Error() != "Namespace already exists." {
+			if !strings.Contains(err.Error(), "not found") {
 				lggr.GetDetached("setup-temporal").Error(fmt.Sprintf("temporal error: %s", err))
 				panic(err)
 			}
@@ -72,7 +72,17 @@ func setupTemporalInternal(config *TemporalSetupConfig) (client.Client, error) {
 
 		_, err = nsc.Describe(context.Background(), config.Namespace)
 		if err != nil {
+			namespaceNotFound := false
+
+			if _, ok := err.(*serviceerror.NotFound); ok {
+				namespaceNotFound = true
+			}
+
 			if _, ok := err.(*serviceerror.NamespaceNotFound); ok {
+				namespaceNotFound = true
+			}
+
+			if namespaceNotFound {
 				// Need to create namespace
 				err = nsc.Register(context.Background(), &workflowservice.RegisterNamespaceRequest{
 					Namespace:                        config.Namespace,
