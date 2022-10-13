@@ -72,7 +72,7 @@ func setupTemporalInternal(config *TemporalSetupConfig) (client.Client, error) {
 
 		_, err = nsc.Describe(context.Background(), config.Namespace)
 		if err != nil {
-			if _, ok := err.(*serviceerror.NotFound); ok {
+			if _, ok := err.(*serviceerror.NamespaceNotFound); ok {
 				// Need to create namespace
 				err = nsc.Register(context.Background(), &workflowservice.RegisterNamespaceRequest{
 					Namespace:                        config.Namespace,
