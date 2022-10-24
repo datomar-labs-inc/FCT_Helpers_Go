@@ -94,11 +94,20 @@ func setupTemporalInternal(config *TemporalSetupConfig) (client.Client, error) {
 					return nil, ferr.Wrap(err)
 				}
 
+				lggr.GetDetached("startup-temporal").Info("Waiting after initial temporal namespace creation")
+				time.Sleep(30 * time.Second)
+
 				// Poll for workspace creation
 				for {
 					_, err = nsc.Describe(context.Background(), config.Namespace)
 					if err != nil {
 						if _, ok := err.(*serviceerror.NotFound); ok {
+							// Wait after namespace registration to give temporal a chance to catch up
+							time.Sleep(1 * time.Second)
+							continue
+						}
+
+						if _, ok := err.(*serviceerror.NamespaceNotFound); ok {
 							// Wait after namespace registration to give temporal a chance to catch up
 							time.Sleep(1 * time.Second)
 							continue
