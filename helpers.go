@@ -74,6 +74,14 @@ func Map[I any, T any](input []I, transform func(item I) T) []T {
 	})
 }
 
+func MaxSliceLength[T any](input []T, maxLen int) []T {
+	if len(input) > maxLen {
+		return input[:maxLen]
+	} else {
+		return input
+	}
+}
+
 type KV[K comparable, V any] struct {
 	K K
 	V V
