@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/friendsofgo/errors v0.9.2
+	github.com/go-logr/zapr v1.2.3
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/gofiber/fiber/v2 v2.29.0
@@ -16,14 +17,13 @@ require (
 	github.com/miolini/datacounter v1.0.3
 	github.com/stretchr/testify v1.8.1
 	github.com/volatiletech/null/v8 v8.1.2
-	github.com/ztrue/tracerr v0.3.0
 	go.opentelemetry.io/otel v1.3.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.3.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.3.0
 	go.opentelemetry.io/otel/sdk v1.3.0
 	go.opentelemetry.io/otel/trace v1.3.0
 	go.temporal.io/api v1.13.0
-	go.temporal.io/sdk v1.17.0
+	go.temporal.io/sdk v1.18.1
 	go.temporal.io/sdk/contrib/opentelemetry v0.1.0
 	go.uber.org/zap v1.20.0
 	golang.org/x/image v0.0.0-20220321031419-a8550c1d254a
@@ -38,7 +38,6 @@ require (
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/go-logr/stdr v1.2.0 // indirect
-	github.com/go-logr/zapr v1.2.3 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -51,7 +50,6 @@ require (
 	github.com/klauspost/compress v1.15.0 // indirect
 	github.com/klauspost/cpuid v1.2.3 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
-	github.com/logrusorgru/aurora v0.0.0-20181002194514-a7b3b318ed4e // indirect
 	github.com/minio/md5-simd v1.1.0 // indirect
 	github.com/minio/sha256-simd v0.1.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
