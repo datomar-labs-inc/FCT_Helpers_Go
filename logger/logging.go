@@ -82,7 +82,7 @@ func NewFromJSON(parent *LogWrapper, jsonBytes []byte) (*LogWrapper, error) {
 		return nil, err
 	}
 
-	wrapper.log = parent.log
+	wrapper.log = parent.log.With()
 
 	return &wrapper, nil
 }

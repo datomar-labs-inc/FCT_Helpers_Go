@@ -127,19 +127,17 @@ func setupTemporalInternal(config *TemporalSetupConfig, logger *lggr.LogWrapper)
 		nsc.Close()
 	}
 
-	c, err := client.NewClient(attachTracer(client.Options{
+	c, err := client.Dial(client.Options{
 		HostPort:           config.Endpoint,
 		Namespace:          config.Namespace,
 		ContextPropagators: []workflow.ContextPropagator{lggr.NewContextPropagator(logger)},
 		Logger:             temporalLogger,
-	}))
+	})
 	if err != nil {
 		panic(err)
 	}
 
 	temporalClient = c
-
-	// TODO figure out how to wait for namespace creation
 
 	return temporalClient, nil
 }

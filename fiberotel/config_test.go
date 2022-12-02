@@ -6,6 +6,7 @@ import (
 )
 
 func Test_configDefault(t *testing.T) {
+	t.Parallel()
 
 	type args struct {
 		config []Config
