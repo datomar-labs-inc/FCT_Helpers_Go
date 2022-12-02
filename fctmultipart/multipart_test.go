@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	lggr "github.com/datomar-labs-inc/FCT_Helpers_Go/logger"
 	"io/ioutil"
 	"testing"
 )
@@ -81,7 +82,7 @@ const UpdateFile = `{"input":{"id":"gid://shopify/ProductVariant/41078819979452"
 {"input":{"id":"gid://shopify/ProductVariant/41079347740860","price":"21.59","compareAtPrice":"21.59"}}`
 
 func TestMultipartForm(t *testing.T) {
-
+	logger := lggr.NewTest(t)
 	var file [][]string
 
 	err := json.Unmarshal([]byte(fileJSON), &file)
@@ -92,7 +93,7 @@ func TestMultipartForm(t *testing.T) {
 
 	fileBody := bytes.NewReader([]byte(UpdateFile))
 
-	form, err := BuildMultipartForm(file, "test_file", fileBody)
+	form, err := BuildMultipartForm(lggr.NewTest(t), file, "test_file", fileBody)
 	if err != nil {
 		t.Error(err)
 		return

@@ -27,7 +27,7 @@ type TemporalSetupConfig struct {
 	ConnectRetries        int
 }
 
-func SetupTemporal(config *TemporalSetupConfig) client.Client {
+func SetupTemporal(config *TemporalSetupConfig, logger *lggr.LogWrapper) client.Client {
 	tries := 0
 
 	for {
@@ -35,17 +35,17 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 			panic("failed to connect to temporal")
 		}
 
-		temporalClient, err := setupTemporalInternal(config)
+		temporalClient, err := setupTemporalInternal(config, logger)
 		if err != nil {
 			if errors.Is(err, context.DeadlineExceeded) || strings.Contains(err.Error(), "context deadline exceeded") {
-				lggr.GetDetached("setup-temporal").Error("could not connect to temporal, retrying...", zap.Error(err))
+				logger.Error("could not connect to temporal, retrying...", zap.Error(err))
 				time.Sleep(10 * time.Second)
 				tries++
 				continue
 			}
 
 			if !strings.Contains(err.Error(), "not found") {
-				lggr.GetDetached("setup-temporal").Error(fmt.Sprintf("temporal error: %s", err))
+				logger.Error(fmt.Sprintf("temporal error: %s", err))
 				panic(err)
 			}
 		}
@@ -55,10 +55,10 @@ func SetupTemporal(config *TemporalSetupConfig) client.Client {
 }
 
 //revive:disable:cyclomatic This is fine
-func setupTemporalInternal(config *TemporalSetupConfig) (client.Client, error) {
+func setupTemporalInternal(config *TemporalSetupConfig, logger *lggr.LogWrapper) (client.Client, error) {
 	var logg TemporalZapLogger
 
-	temporalLogger := TemporalZapLogger{logger: lggr.GetDetached("temporal-internal").WithCallerSkip(1)}
+	temporalLogger := TemporalZapLogger{logger: logger.WithCallerSkip(1)}
 
 	if !config.SkipNamespaceCreation {
 		// First, ensure the desired namespace exists
@@ -94,7 +94,7 @@ func setupTemporalInternal(config *TemporalSetupConfig) (client.Client, error) {
 					return nil, ferr.Wrap(err)
 				}
 
-				lggr.GetDetached("startup-temporal").Info("Waiting after initial temporal namespace creation")
+				logger.Info("Waiting after initial temporal namespace creation")
 				time.Sleep(30 * time.Second)
 
 				// Poll for workspace creation
@@ -130,7 +130,7 @@ func setupTemporalInternal(config *TemporalSetupConfig) (client.Client, error) {
 	c, err := client.NewClient(attachTracer(client.Options{
 		HostPort:           config.Endpoint,
 		Namespace:          config.Namespace,
-		ContextPropagators: []workflow.ContextPropagator{lggr.NewContextPropagator()},
+		ContextPropagators: []workflow.ContextPropagator{lggr.NewContextPropagator(logger)},
 		Logger:             temporalLogger,
 	}))
 	if err != nil {

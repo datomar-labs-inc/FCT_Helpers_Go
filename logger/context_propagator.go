@@ -7,11 +7,15 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func NewContextPropagator() *ContextPropogator {
-	return &ContextPropogator{}
+func NewContextPropagator(logger *LogWrapper) *ContextPropogator {
+	return &ContextPropogator{
+		logger: logger,
+	}
 }
 
-type ContextPropogator struct {}
+type ContextPropogator struct {
+	logger *LogWrapper
+}
 
 func (l *ContextPropogator) Inject(ctx context.Context, writer workflow.HeaderWriter) error {
 	lw := FromContext(ctx)
@@ -35,14 +39,12 @@ func (l *ContextPropogator) Inject(ctx context.Context, writer workflow.HeaderWr
 
 func (l *ContextPropogator) Extract(ctx context.Context, reader workflow.HeaderReader) (context.Context, error) {
 	if pl, ok := reader.Get(string(ContextKey)); ok {
-		var lggr LogWrapper
-
-		err := json.Unmarshal(pl.Data, &lggr)
+		loggerFromJson, err := NewFromJSON(l.logger, pl.Data)
 		if err != nil {
-			return ctx, err
+			return nil, err
 		}
 
-		return lggr.AttachToContext(ctx), nil
+		return loggerFromJson.AttachToContext(ctx), nil
 	}
 
 	return ctx, nil
@@ -70,18 +72,13 @@ func (l *ContextPropogator) InjectFromWorkflow(context workflow.Context, writer 
 
 func (l *ContextPropogator) ExtractToWorkflow(ctx workflow.Context, reader workflow.HeaderReader) (workflow.Context, error) {
 	if pl, ok := reader.Get(string(ContextKey)); ok {
-		var lggr LogWrapper
-
-		err := lggr.UnmarshalJSONSpecial(pl.Data)
+		err := l.logger.UnmarshalJSONSpecial(pl.Data)
 		if err != nil {
 			return ctx, err
 		}
 
-		ctx = workflow.WithValue(ctx, ContextKey, &lggr)
+		ctx = workflow.WithValue(ctx, ContextKey, l.logger)
 	}
 
 	return ctx, nil
 }
-
-
-

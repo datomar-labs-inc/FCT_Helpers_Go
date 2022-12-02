@@ -39,10 +39,6 @@ func New(config *Config) func(c *fiber.Ctx) error {
 
 		log = lggr.FromContext(c.UserContext())
 
-		if log == nil {
-			log = lggr.GetDetached("request-logging")
-		}
-
 		log = log.WithCallerSkip(2)
 
 		var fields []zapcore.Field
@@ -89,10 +85,6 @@ func Recovery() func(c *fiber.Ctx) error {
 		var logger *lggr.LogWrapper
 
 		logger = lggr.FromContext(c.UserContext(), "request-recovery")
-
-		if logger == nil {
-			logger = lggr.GetDetached("recovery-logging")
-		}
 
 		logger = logger.WithCallerSkip(1)
 

@@ -7,10 +7,14 @@ import (
 	"go.uber.org/zap"
 )
 
-func Middleware(c *fiber.Ctx) error {
-	requestID := uuid.NewString()
-	lg := logger.With(zap.String("request_id", requestID))
-	c.SetUserContext(context.WithValue(c.UserContext(), ContextKey, lg))
+func Middleware(logger *LogWrapper) func(c *fiber.Ctx) error {
+	return func (c *fiber.Ctx) error {
+		requestID := uuid.NewString()
+		lg := logger.With(zap.String("request_id", requestID))
+		c.SetUserContext(context.WithValue(c.UserContext(), ContextKey, lg))
 
-	return c.Next()
+		return c.Next()
+	}
 }
+
+

@@ -2,13 +2,12 @@ package lggr
 
 import (
 	"context"
+	"encoding/json"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest"
 	"testing"
 )
-
-var logger *LogWrapper
 
 type Kind string
 type ContextKeyType string
@@ -54,19 +53,6 @@ type ElasticLoggingFields struct {
 	Action string
 }
 
-func init() {
-	config := zap.NewProductionConfig()
-	config.OutputPaths = []string{"stdout"}
-	lg, err := config.Build()
-	if err != nil {
-		panic(err)
-	}
-
-	logger = &LogWrapper{
-		log: lg,
-	}
-}
-
 type LogWrapper struct {
 	CallerSkip     int         `json:"caller_skip"`
 	DetachedFields []zap.Field `json:"detached_fields"`
@@ -74,19 +60,57 @@ type LogWrapper struct {
 	ctx            context.Context
 }
 
-func TestMode(t *testing.T) {
-	logger = &LogWrapper{log: zaptest.NewLogger(t)}
+func New() *LogWrapper {
+	config := zap.NewProductionConfig()
+	config.OutputPaths = []string{"stdout"}
+
+	lg, err := config.Build()
+	if err != nil {
+		panic(err)
+	}
+
+	return &LogWrapper{
+		log: lg,
+	}
 }
 
-// GetDetached returns a new logger wrapping the zap logger with a default event.kind of "event"
-// action should be string describing the action being performed
-// https://www.elastic.co/guide/en/ecs/current/ecs-event.html#field-event-action
-func GetDetached(action string) *LogWrapper {
-	return logger.With(zap.String("event.kind", string(KindEvent)), zap.Namespace("_app_data")).With(zap.String("event.action", action)).
-		WithCallerSkip(1)
+func NewFromJSON(parent *LogWrapper, jsonBytes []byte) (*LogWrapper, error) {
+	var wrapper LogWrapper
+
+	err := json.Unmarshal(jsonBytes, &wrapper)
+	if err != nil {
+		return nil, err
+	}
+
+	wrapper.log = parent.log
+
+	return &wrapper, nil
+}
+
+func NewDev() *LogWrapper {
+	lg, err := zap.NewDevelopment()
+	if err != nil {
+		panic(err)
+	}
+
+	return &LogWrapper{
+		log: lg,
+	}
+}
+
+func NewTest(t *testing.T) *LogWrapper {
+	testLogger := zaptest.NewLogger(t)
+
+	return &LogWrapper{
+		log: testLogger,
+	}
 }
 
 func FromContext(ctx context.Context, action ...string) *LogWrapper {
+	if ctx == nil {
+		return nil
+	}
+
 	if lggr, ok := ctx.Value(ContextKey).(*LogWrapper); ok {
 
 		if len(action) > 0 {
@@ -106,6 +130,10 @@ func (log *LogWrapper) GetInternalZapLogger() *zap.Logger {
 }
 
 func (log *LogWrapper) AttachToContext(parent context.Context) context.Context {
+	if log.log == nil {
+		panic("cannot attach logger to context without internal zap logger")
+	}
+
 	ctx := context.WithValue(parent, ContextKey, log)
 	log.ctx = ctx
 	return ctx
@@ -258,7 +286,7 @@ func (log *LogWrapper) AddFields(fields ...zap.Field) *LogWrapper {
 
 func (log *LogWrapper) With(fields ...zap.Field) *LogWrapper {
 	newLog := &LogWrapper{
-		log: logger.log,
+		log: log.log,
 	}
 
 	newLog = newLog.AddFields(log.DetachedFields...)
@@ -271,7 +299,7 @@ func (log *LogWrapper) With(fields ...zap.Field) *LogWrapper {
 func (log *LogWrapper) WithCallerSkip(n int) *LogWrapper {
 	newLog := &LogWrapper{
 		CallerSkip: log.CallerSkip,
-		log:        logger.log,
+		log:        log.log,
 	}
 
 	newLog = newLog.AddFields(log.DetachedFields...)

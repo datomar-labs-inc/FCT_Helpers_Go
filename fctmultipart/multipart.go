@@ -20,9 +20,10 @@ type MultipartForm struct {
 	wg          *sync.WaitGroup
 	writeMe     chan func() error
 	waitStarted bool
+	logger      *lggr.LogWrapper
 }
 
-func NewMultipartForm() *MultipartForm {
+func NewMultipartForm(logger *lggr.LogWrapper) *MultipartForm {
 	pipeReader, pipeWriter := io.Pipe()
 
 	fw := multipart.NewWriter(pipeWriter)
@@ -34,6 +35,7 @@ func NewMultipartForm() *MultipartForm {
 		wg:          &sync.WaitGroup{},
 		waitStarted: false,
 		writeMe:     make(chan func() error, 2000),
+		logger:      logger.With(zap.String("action", "multipart_form")),
 	}
 
 	return mpf
@@ -47,7 +49,7 @@ func (m *MultipartForm) startWait() {
 				if writeFn != nil {
 					err := writeFn()
 					if err != nil {
-						lggr.GetDetached("multipart-write").Error("failed to write to multipart form body", zap.Error(err))
+						m.logger.Error("failed to write to multipart form body", zap.Error(err))
 					}
 				}
 
@@ -223,8 +225,8 @@ func (m *MultipartForm) close() error {
 	return ferr.Wrap(err)
 }
 
-func BuildMultipartForm(stringParams [][]string, fileID string, fileBody io.Reader) (*MultipartForm, error) {
-	form := NewMultipartForm()
+func BuildMultipartForm(logger *lggr.LogWrapper, stringParams [][]string, fileID string, fileBody io.Reader) (*MultipartForm, error) {
+	form := NewMultipartForm(logger)
 
 	for _, parameter := range stringParams {
 		err := form.AddField(parameter[0], parameter[1])

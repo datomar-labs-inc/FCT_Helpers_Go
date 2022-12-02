@@ -10,7 +10,7 @@ func (log *LogWrapper) UnmarshalJSONSpecial(bytes []byte) error {
 		return err
 	}
 
-	*log = *logger.With(nl.DetachedFields...).WithCallerSkip(nl.CallerSkip)
+	*log = *log.With(nl.DetachedFields...).WithCallerSkip(nl.CallerSkip)
 
 	return nil
 }
