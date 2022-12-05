@@ -39,12 +39,12 @@ func (l *ContextPropogator) Inject(ctx context.Context, writer workflow.HeaderWr
 
 func (l *ContextPropogator) Extract(ctx context.Context, reader workflow.HeaderReader) (context.Context, error) {
 	if pl, ok := reader.Get(string(ContextKey)); ok {
-		loggerFromJson, err := NewFromJSON(l.logger, pl.Data)
+		loggerFromJSON, err := NewFromJSON(l.logger, pl.Data)
 		if err != nil {
 			return nil, err
 		}
 
-		return loggerFromJson.AttachToContext(ctx), nil
+		return loggerFromJSON.AttachToContext(ctx), nil
 	}
 
 	return ctx, nil
