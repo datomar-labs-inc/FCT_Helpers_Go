@@ -37,9 +37,10 @@ func New(config *Config) func(c *fiber.Ctx) error {
 
 		var log *lggr.LogWrapper
 
-		log = lggr.FromContext(c.UserContext())
-
-		log = log.WithCallerSkip(2)
+		log = lggr.
+			FromContext(c.UserContext()).
+			WithOptions(zap.AddCallerSkip(2)).
+			With(zap.Namespace("@req"))
 
 		var fields []zapcore.Field
 
@@ -84,9 +85,9 @@ func Recovery() func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		var logger *lggr.LogWrapper
 
-		logger = lggr.FromContext(c.UserContext(), "request-recovery")
+		logger = lggr.FromContext(c.UserContext())
 
-		logger = logger.WithCallerSkip(1)
+		logger = logger.WithOptions(zap.AddCallerSkip(1)).With(zap.Namespace("@recover"))
 
 		defer func() {
 			if err := recover(); err != nil {

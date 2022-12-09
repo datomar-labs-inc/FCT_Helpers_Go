@@ -58,7 +58,7 @@ func SetupTemporal(config *TemporalSetupConfig, logger *lggr.LogWrapper) client.
 func setupTemporalInternal(config *TemporalSetupConfig, logger *lggr.LogWrapper) (client.Client, error) {
 	var logg TemporalZapLogger
 
-	temporalLogger := TemporalZapLogger{logger: logger.WithCallerSkip(1)}
+	temporalLogger := TemporalZapLogger{logger: logger.WithOptions(zap.AddCallerSkip(1)).With(zap.Namespace("@temporal"))}
 
 	if !config.SkipNamespaceCreation {
 		// First, ensure the desired namespace exists
@@ -130,7 +130,7 @@ func setupTemporalInternal(config *TemporalSetupConfig, logger *lggr.LogWrapper)
 	c, err := client.Dial(client.Options{
 		HostPort:           config.Endpoint,
 		Namespace:          config.Namespace,
-		ContextPropagators: []workflow.ContextPropagator{lggr.NewContextPropagator(logger)},
+		ContextPropagators: []workflow.ContextPropagator{},
 		Logger:             temporalLogger,
 	})
 	if err != nil {
