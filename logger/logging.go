@@ -29,7 +29,7 @@ func New() *LogWrapper {
 		panic(err)
 	}
 
-	return lg.With(zap.Namespace("@payload")).WithOptions(zap.AddCallerSkip(1))
+	return lg.With(zap.Namespace("@payload"))
 }
 
 func NewDev() *LogWrapper {

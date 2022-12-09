@@ -58,7 +58,7 @@ func SetupTemporal(config *TemporalSetupConfig, logger *lggr.LogWrapper) client.
 func setupTemporalInternal(config *TemporalSetupConfig, logger *lggr.LogWrapper) (client.Client, error) {
 	var logg TemporalZapLogger
 
-	temporalLogger := TemporalZapLogger{logger: logger.WithOptions(zap.AddCallerSkip(1)).With(zap.Namespace("@temporal"))}
+	temporalLogger := TemporalZapLogger{logger: logger.WithOptions(zap.AddCallerSkip(2)).With(zap.Namespace("@temporal"))}
 
 	if !config.SkipNamespaceCreation {
 		// First, ensure the desired namespace exists

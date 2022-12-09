@@ -39,7 +39,6 @@ func New(config *Config) func(c *fiber.Ctx) error {
 
 		log = lggr.
 			FromContext(c.UserContext()).
-			WithOptions(zap.AddCallerSkip(2)).
 			With(zap.Namespace("@req"))
 
 		var fields []zapcore.Field
