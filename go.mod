@@ -3,9 +3,9 @@ module github.com/datomar-labs-inc/FCT_Helpers_Go
 go 1.18
 
 require (
+	github.com/Code-Hex/dd v1.1.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/friendsofgo/errors v0.9.2
-	github.com/go-logr/zapr v1.2.3
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/gofiber/fiber/v2 v2.29.0
@@ -15,17 +15,17 @@ require (
 	github.com/lib/pq v1.10.5
 	github.com/minio/minio-go/v6 v6.0.57
 	github.com/miolini/datacounter v1.0.3
+	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.1
+	github.com/tidwall/pretty v1.2.1
 	github.com/volatiletech/null/v8 v8.1.2
 	go.opentelemetry.io/otel v1.3.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.3.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.3.0
-	go.opentelemetry.io/otel/sdk v1.3.0
 	go.opentelemetry.io/otel/trace v1.3.0
 	go.temporal.io/api v1.13.0
 	go.temporal.io/sdk v1.18.1
 	go.temporal.io/sdk/contrib/opentelemetry v0.1.0
-	go.uber.org/zap v1.20.0
+	go.uber.org/multierr v1.6.0
+	go.uber.org/zap v1.22.0
 	golang.org/x/image v0.0.0-20220321031419-a8550c1d254a
 	gopkg.in/go-playground/validator.v9 v9.31.0
 )
@@ -33,7 +33,6 @@ require (
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/benbjohnson/clock v1.1.0 // indirect
-	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
@@ -45,7 +44,6 @@ require (
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/klauspost/compress v1.15.0 // indirect
 	github.com/klauspost/cpuid v1.2.3 // indirect
@@ -65,13 +63,12 @@ require (
 	github.com/volatiletech/inflect v0.0.1 // indirect
 	github.com/volatiletech/randomize v0.0.1 // indirect
 	github.com/volatiletech/strmangle v0.0.1 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.3.0 // indirect
-	go.opentelemetry.io/proto/otlp v0.11.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.3.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	go.uber.org/multierr v1.6.0 // indirect
+	go.uber.org/goleak v1.1.12 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/net v0.1.0 // indirect
-	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect

@@ -2,8 +2,11 @@ package lggr
 
 import (
 	"context"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/logger/prettylogger"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest"
+	"os"
 	"testing"
 )
 
@@ -33,12 +36,16 @@ func New() *LogWrapper {
 }
 
 func NewDev() *LogWrapper {
-	lg, err := zap.NewDevelopment()
-	if err != nil {
-		panic(err)
-	}
+	ec := prettylogger.NewEncoderConfig()
+	ec.CallerKey = "caller"
 
-	return lg
+	enc := prettylogger.NewEncoder(ec)
+
+	return zap.New(zapcore.NewCore(
+		enc,
+		os.Stdout,
+		zapcore.DebugLevel,
+	)).With(zap.Namespace("@payload"))
 }
 
 func NewTest(t *testing.T) *LogWrapper {
