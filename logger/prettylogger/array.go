@@ -177,7 +177,7 @@ func (e *prettyloggerEncoder) AppendObject(marshaler zapcore.ObjectMarshaler) er
 	return nil
 }
 
-func (e *prettyloggerEncoder) AppendReflected(value interface{}) error {
+func (e *prettyloggerEncoder) AppendReflected(value any) error {
 	e.addSeparator()
 	enc := e.clone()
 	enc.OpenNamespace("")

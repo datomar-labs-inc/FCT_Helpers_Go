@@ -15,6 +15,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+//revive:disable:cyclomatic This code is from an external package
 var _ = zap.RegisterEncoder("pretty_console", func(ec zapcore.EncoderConfig) (zapcore.Encoder, error) {
 	return NewEncoder(ec), nil
 })
@@ -340,7 +341,7 @@ func (i indentingWriter) Write(p []byte) (n int, err error) {
 	read := written
 	n, _ = i.buf.Write(i.lineEnding)
 	written += n
-	read += 1
+	read++
 	for read <= len(p) {
 		for ii := 0; ii < i.indent; ii++ {
 			n, _ := i.buf.Write([]byte(" "))
@@ -359,7 +360,7 @@ func (i indentingWriter) Write(p []byte) (n int, err error) {
 		read += n
 		n, _ = i.buf.Write(i.lineEnding)
 		written += n
-		read += 1
+		read++
 	}
 	return written, nil
 }

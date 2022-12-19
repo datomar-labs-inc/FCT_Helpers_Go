@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+//revive:disable:cyclomatic This code is from an external package
+
 // Encodes the given error into fields of an object. A field with the given
 // name is added for the error message.
 //
@@ -31,7 +33,7 @@ func (e *prettyloggerEncoder) encodeError(key string, err error) (retErr error) 
 	enc.OpenNamespace(key)
 
 	enc.colorizeAtLevel("=")
-	enc.namespaceIndent += 1
+	enc.namespaceIndent++
 	enc.inList = true
 
 	// Try to capture panics (from nil references or otherwise) when calling

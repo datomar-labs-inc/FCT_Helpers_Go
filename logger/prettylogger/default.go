@@ -108,7 +108,7 @@ func defaultNameEncoder(name string, enc zapcore.PrimitiveArrayEncoder) {
 	buf.Free()
 }
 
-var reflectedListBreakSize = map[interface{}]int{
+var reflectedListBreakSize = map[any]int{
 	new(byte): 16, reflect.TypeOf(*new(byte)): 16,
 	new(bool): 8, *new(bool): 8,
 	new(complex64): 8, *new(complex64): 8,
@@ -142,7 +142,7 @@ type ddEncoder struct {
 	opts []dd.OptionFunc
 }
 
-func (d ddEncoder) Encode(i interface{}) error {
+func (d ddEncoder) Encode(i any) error {
 	jsonBytes, err := json.Marshal(i)
 	if err != nil {
 		return err

@@ -7,10 +7,10 @@ import (
 )
 
 var (
-	_prettyloggerPool = sync.Pool{New: func() interface{} {
+	_prettyloggerPool = sync.Pool{New: func() any {
 		return &prettyloggerEncoder{}
 	}}
-	_recorderPool = sync.Pool{New: func() interface{} {
+	_recorderPool = sync.Pool{New: func() any {
 		return &recordingEncoder{}
 	}}
 	_bufferPool    = buffer.NewPool()

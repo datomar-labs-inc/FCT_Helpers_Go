@@ -113,7 +113,7 @@ func TestEncodeEntry(t *testing.T) {
 							"2": testStableMap{
 								"1": "string",
 								"2": testArray{1, 2, 3, 4},
-								"3": interface{}(2.0),
+								"3": any(2.0),
 								"4": &testStableMap{"r1": []string{"r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"}},
 							},
 						},
@@ -263,7 +263,7 @@ func TestEncodeEntry(t *testing.T) {
 	}
 }
 
-type testStableMap map[string]interface{}
+type testStableMap map[string]any
 
 func (t testStableMap) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	// Put these in alphabetical order so order doesn't change test-to-test
@@ -295,12 +295,12 @@ type testPanicError string
 func (t *testPanicError) Error() string {
 	if t == nil {
 		return string(*t)
-	} else {
-		panic(*t)
 	}
+
+	panic(*t)
 }
 
-type testArray []interface{}
+type testArray []any
 
 func (t testArray) MarshalLogArray(encoder zapcore.ArrayEncoder) error {
 	for _, val := range t {

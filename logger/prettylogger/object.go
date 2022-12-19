@@ -98,12 +98,12 @@ func (e *prettyloggerEncoder) AddArray(key string, marshaler zapcore.ArrayMarsha
 	return nil
 }
 
-func (e *prettyloggerEncoder) AddReflected(key string, value interface{}) error {
+func (e *prettyloggerEncoder) AddReflected(key string, value any) error {
 	enc := e.clone()
 	enc.OpenNamespace(key)
 
 	enc.colorizeAtLevel("=")
-	enc.namespaceIndent += 1
+	enc.namespaceIndent++
 	l := enc.buf.Len()
 	iw := indentingWriter{
 		buf:        enc.buf,

@@ -154,7 +154,7 @@ func (r *recordingEncoder) AddUintptr(key string, value uintptr) {
 }
 
 // AddReflected implements zapcore.ObjectEncoder
-func (r *recordingEncoder) AddReflected(key string, value interface{}) error {
+func (r *recordingEncoder) AddReflected(key string, value any) error {
 	r.fields = append(r.fields, zap.Reflect(key, value))
 	return nil
 }
