@@ -7,9 +7,7 @@ import (
 	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
-	"os"
 	"strings"
-	"testing"
 	"time"
 
 	"go.temporal.io/sdk/workflow"
@@ -204,8 +202,65 @@ func Receive[T any](ctx workflow.Context, ch workflow.ReceiveChannel) *T {
 	return &result
 }
 
-func skipCI(t *testing.T) {
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping testing in CI environment")
+type SignalSwitch struct {
+	Selector       workflow.Selector
+	SignalFired    string
+	errChan        chan error
+	handlerDidFire bool
+}
+
+func NewSignalSwitch(ctx workflow.Context) *SignalSwitch {
+	return &SignalSwitch{
+		Selector: workflow.NewSelector(ctx),
+		errChan:  make(chan error, 1),
 	}
 }
+
+func (ss *SignalSwitch) Select(ctx workflow.Context) error {
+	ss.Selector.Select(ctx)
+
+	if !ss.handlerDidFire {
+		return nil
+	} else {
+		return <-ss.errChan
+	}
+}
+
+func AddSignalHandler[T any](ctx workflow.Context, ss *SignalSwitch, signal string, handler SignalHandler[T]) {
+	ss.Selector.AddReceive(workflow.GetSignalChannel(ctx, signal), func(c workflow.ReceiveChannel, more bool) {
+		var signalValue T
+		c.Receive(ctx, &signalValue)
+		ss.SignalFired = signal
+		ss.handlerDidFire = true
+
+		err := handler(ctx, signalValue)
+		if err != nil {
+			ss.errChan <- err
+		} else {
+			ss.errChan <- nil
+		}
+	})
+}
+
+func AddFutureHandler[T any](ctx workflow.Context, ss *SignalSwitch, future workflow.Future, handler SignalHandler[T]) {
+	ss.Selector.AddFuture(future, func(f workflow.Future) {
+		var futureValue T
+
+		err := f.Get(ctx, &futureValue)
+		if err != nil {
+			ss.errChan <- err
+			return
+		}
+
+		ss.handlerDidFire = true
+
+		err = handler(ctx, futureValue)
+		if err != nil {
+			ss.errChan <- err
+		} else {
+			ss.errChan <- nil
+		}
+	})
+}
+
+type SignalHandler[T any] func(ctx workflow.Context, signalBody T) error
