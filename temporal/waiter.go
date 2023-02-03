@@ -12,7 +12,7 @@ import (
 type Future[T any] struct {
 	Key       string `json:"key"`
 	Finalized bool   `json:"finalized"`
-	Data      *T     `json:"data,omitempty"`
+	Data      T      `json:"data,omitempty"`
 	Error     error  `json:"error,omitempty"`
 }
 
@@ -46,7 +46,7 @@ func (w *Future[T]) Finalize() {
 	w.Finalized = true
 }
 
-func (w *Future[T]) FinalizeWithData(data *T) {
+func (w *Future[T]) FinalizeWithData(data T) {
 	w.Finalized = true
 	w.Data = data
 }
@@ -90,26 +90,28 @@ func AwaitFuture(ctx context.Context, temporal client.Client, workflowSingleKey 
 
 // AwaitTypedFuture will poll a workflow for the result of a future, and return it or an error
 // the context variable will be used for timeouts
-func AwaitTypedFuture[T any](ctx context.Context, temporal client.Client, workflowSingleKey string, key string) (*T, error) {
+func AwaitTypedFuture[T any](ctx context.Context, temporal client.Client, workflowSingleKey string, key string) (T, error) {
 	wfID, runID := MustParseWorkflowSingleID(workflowSingleKey)
+
+	var emptyT T
 
 	for {
 		ctxErr := ctx.Err()
 
 		if errors.Is(ctxErr, context.Canceled) || errors.Is(ctxErr, context.DeadlineExceeded) {
-			return nil, ctxErr
+			return emptyT, ctxErr
 		}
 
-		val, err := temporal.QueryWorkflow(ctx, wfID, runID, fmt.Sprintf("workflow_waiter_%s", key))
+		encodedValue, err := temporal.QueryWorkflow(ctx, wfID, runID, fmt.Sprintf("workflow_waiter_%s", key))
 		if err != nil {
-			return nil, err
+			return emptyT, err
 		}
 
 		var waiter Future[T]
 
-		err = val.Get(&waiter)
+		err = encodedValue.Get(&waiter)
 		if ctxErr != nil {
-			return nil, err
+			return emptyT, err
 		}
 
 		if waiter.Finalized {
