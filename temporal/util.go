@@ -221,9 +221,9 @@ func (ss *SignalSwitch) Select(ctx workflow.Context) error {
 
 	if !ss.handlerDidFire {
 		return nil
-	} else {
-		return <-ss.errChan
 	}
+
+	return <-ss.errChan
 }
 
 func AddSignalHandler[T any](ctx workflow.Context, ss *SignalSwitch, signal string, handler SignalHandler[T]) {
