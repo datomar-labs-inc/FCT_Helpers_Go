@@ -42,7 +42,7 @@ type Wrapper struct {
 }
 
 func (w *Wrapper) Error() string {
-	if w.cause != nil {
+	if w != nil && w.cause != nil {
 		return w.Summarize().String()
 	}
 
@@ -50,6 +50,10 @@ func (w *Wrapper) Error() string {
 }
 
 func (w *Wrapper) Unwrap() error {
+	if w == nil {
+		return nil
+	}
+
 	return w.cause
 }
 
@@ -69,11 +73,23 @@ func Summarize(err error) *ErrorSummary {
 }
 
 func (w *Wrapper) Summarize() *ErrorSummary {
+	if w == nil {
+		return nil
+	}
+
 	if unwrapped, ok := w.cause.(*Wrapper); ok {
 		es := unwrapped.Summarize()
 
+		var cause string
+
+		if es != nil {
+			cause = es.Cause
+		} else {
+			cause = "nil"
+		}
+
 		return &ErrorSummary{
-			Cause: es.Cause,
+			Cause: cause,
 			Stack: append([]*SummaryFrame{w.getSummaryFrame()}, es.Stack...),
 		}
 	}
