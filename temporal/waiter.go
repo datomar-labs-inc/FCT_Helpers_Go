@@ -90,9 +90,7 @@ func AwaitFuture(ctx context.Context, temporal client.Client, workflowSingleKey 
 
 // AwaitTypedFuture will poll a workflow for the result of a future, and return it or an error
 // the context variable will be used for timeouts
-func AwaitTypedFuture[T any](ctx context.Context, temporal client.Client, workflowSingleKey string, key string) (T, error) {
-	wfID, runID := MustParseWorkflowSingleID(workflowSingleKey)
-
+func AwaitTypedFuture[T any](ctx context.Context, temporal client.Client, wfID, runID string, key string) (T, error) {
 	var emptyT T
 
 	for {

@@ -63,6 +63,9 @@ var (
 	ActivityCtxSmall = func(ctx workflow.Context) workflow.Context {
 		return ActivityCtx(ctx, ActivityTimeoutS, ActivityMaxRetriesS)
 	}
+	LocalActivityCtxSmall = func(ctx workflow.Context) workflow.Context {
+		return LocalActivityCtx(ctx, ActivityTimeoutS, ActivityMaxRetriesS)
+	}
 )
 
 const StandardHeartbeatSpacing = 10 * time.Second
@@ -83,6 +86,13 @@ func ExecuteActivity[T any](ctx workflow.Context, activity any, args ...any) (*T
 // The activity options will be created with a max run duration of timeout
 func ActivityCtx(ctx workflow.Context, timeout time.Duration, retry *temporal.RetryPolicy) workflow.Context {
 	return workflow.WithActivityOptions(ctx, workflow.ActivityOptions{
+		StartToCloseTimeout: timeout,
+		RetryPolicy:         retry,
+	})
+} // LocalActivityCtx is a helper to create a context with workflow.LocalActivityOptions attached
+// The activity options will be created with a max run duration of timeout
+func LocalActivityCtx(ctx workflow.Context, timeout time.Duration, retry *temporal.RetryPolicy) workflow.Context {
+	return workflow.WithLocalActivityOptions(ctx, workflow.LocalActivityOptions{
 		StartToCloseTimeout: timeout,
 		RetryPolicy:         retry,
 	})
