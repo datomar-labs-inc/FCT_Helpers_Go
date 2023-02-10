@@ -66,6 +66,9 @@ var (
 	LocalActivityCtxSmall = func(ctx workflow.Context) workflow.Context {
 		return LocalActivityCtx(ctx, ActivityTimeoutS, ActivityMaxRetriesS)
 	}
+	LocalActivityCtxExtraSmall = func(ctx workflow.Context) workflow.Context {
+		return LocalActivityCtx(ctx, ActivityTimeoutXS, ActivityMaxRetriesNone)
+	}
 )
 
 const StandardHeartbeatSpacing = 10 * time.Second
