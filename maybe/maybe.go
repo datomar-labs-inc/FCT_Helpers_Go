@@ -2,10 +2,7 @@ package maybe
 
 import (
 	"encoding/json"
-	"github.com/friendsofgo/errors"
 )
-
-var ErrEmpty = errors.New("empty value")
 
 type Maybe[T any] struct {
 	hasValue bool
@@ -16,12 +13,12 @@ func (m Maybe[T]) HasValue() bool {
 	return m.hasValue
 }
 
-func (m Maybe[T]) Value() (T, error) {
+func (m Maybe[T]) Value() (T, bool) {
 	if !m.hasValue {
-		return m.value, ErrEmpty
+		return m.value, false
 	}
 
-	return m.value, nil
+	return m.value, true
 }
 
 func (m Maybe[T]) UnmarshalJSON(bytes []byte) error {
