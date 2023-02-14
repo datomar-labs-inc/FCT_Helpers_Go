@@ -61,6 +61,14 @@ func (m Maybe[T]) IfSetCopyTo(target *T) {
 	}
 }
 
+func (m Maybe[T]) Or(defaultValue T) T {
+	if m.hasValue {
+		return m.value
+	} else {
+		return defaultValue
+	}
+}
+
 func WithValue[T any](val T) Maybe[T] {
 	return Maybe[T]{
 		value:    val,
