@@ -9,6 +9,10 @@ type Maybe[T any] struct {
 	value    T
 }
 
+type MaybeIsh interface {
+	HasValue() bool
+}
+
 func (m Maybe[T]) HasValue() bool {
 	return m.hasValue
 }
@@ -67,6 +71,40 @@ func (m Maybe[T]) Or(defaultValue T) T {
 	} else {
 		return defaultValue
 	}
+}
+
+func Map[St any, Mt any](from Maybe[St], mapFunc func(value St) Mt) Maybe[Mt] {
+	if v, ok := from.Value(); ok {
+		return WithValue(mapFunc(v))
+	}
+
+	return Maybe[Mt]{}
+}
+
+func IsMoreThanOneSet(maybies ...MaybeIsh) bool {
+	isOneSet := false
+
+	for _, maybe := range maybies {
+		if maybe.HasValue() {
+			if isOneSet {
+				return true
+			}
+
+			isOneSet = true
+		}
+	}
+
+	return false
+}
+
+func IsAnySet(maybies ...MaybeIsh) bool {
+	for _, maybe := range maybies {
+		if maybe.HasValue() {
+			return true
+		}
+	}
+
+	return false
 }
 
 func WithValue[T any](val T) Maybe[T] {
