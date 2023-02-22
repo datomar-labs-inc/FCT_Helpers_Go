@@ -9,10 +9,13 @@ type Maybe[T any] struct {
 	value    T
 }
 
-type MaybeIsh interface {
+// Ish is any item that can have a value or not
+// this interface is used to implement some nice helpers for multiple types of mabies
+type Ish interface {
 	HasValue() bool
 }
 
+//goland:noinspection GoMixedReceiverTypes
 func (m Maybe[T]) HasValue() bool {
 	return m.hasValue
 }
@@ -25,7 +28,16 @@ func (m Maybe[T]) Value() (T, bool) {
 	return m.value, true
 }
 
-func (m Maybe[T]) UnmarshalJSON(bytes []byte) error {
+// UnmarshalJSON
+// Has a pointer receiver so that JSON can be unmarshalled into the proper target object
+// Without this, it will not work
+//
+//goland:noinspection GoMixedReceiverTypes
+func (m *Maybe[T]) UnmarshalJSON(bytes []byte) error {
+	if m == nil {
+		return nil
+	}
+
 	if string(bytes) == "null" {
 		return nil
 	} else {
@@ -43,6 +55,7 @@ func (m Maybe[T]) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
+//goland:noinspection GoMixedReceiverTypes
 func (m Maybe[T]) MarshalJSON() ([]byte, error) {
 	if m.hasValue {
 		return json.Marshal(m.value)
@@ -51,12 +64,14 @@ func (m Maybe[T]) MarshalJSON() ([]byte, error) {
 	}
 }
 
+//goland:noinspection GoMixedReceiverTypes
 func (m Maybe[T]) If(ifFunc func(val T)) {
 	if m.hasValue {
 		ifFunc(m.value)
 	}
 }
 
+//goland:noinspection GoMixedReceiverTypes
 func (m Maybe[T]) IfSetCopyTo(target *T) {
 	if m.hasValue {
 		if target != nil {
@@ -65,6 +80,7 @@ func (m Maybe[T]) IfSetCopyTo(target *T) {
 	}
 }
 
+//goland:noinspection GoMixedReceiverTypes
 func (m Maybe[T]) Or(defaultValue T) T {
 	if m.hasValue {
 		return m.value
@@ -81,7 +97,7 @@ func Map[St any, Mt any](from Maybe[St], mapFunc func(value St) Mt) Maybe[Mt] {
 	return Maybe[Mt]{}
 }
 
-func IsMoreThanOneSet(maybies ...MaybeIsh) bool {
+func IsMoreThanOneSet(maybies ...Ish) bool {
 	isOneSet := false
 
 	for _, maybe := range maybies {
@@ -97,7 +113,7 @@ func IsMoreThanOneSet(maybies ...MaybeIsh) bool {
 	return false
 }
 
-func IsAnySet(maybies ...MaybeIsh) bool {
+func IsAnySet(maybies ...Ish) bool {
 	for _, maybe := range maybies {
 		if maybe.HasValue() {
 			return true
