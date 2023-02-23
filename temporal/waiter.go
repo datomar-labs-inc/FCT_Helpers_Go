@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/friendsofgo/errors"
+	"go.temporal.io/api/serviceerror"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/workflow"
+	"strings"
 	"time"
 )
 
@@ -102,7 +104,15 @@ func AwaitTypedFuture[T any](ctx context.Context, temporal client.Client, wfID, 
 
 		encodedValue, err := temporal.QueryWorkflow(ctx, wfID, runID, fmt.Sprintf("workflow_waiter_%s", key))
 		if err != nil {
-			return emptyT, err
+			var queryErr *serviceerror.QueryFailed
+
+			if errors.As(err, &queryErr) && strings.Contains(queryErr.Message, "unknown queryType") {
+				// Can be safely ignored, future is not initialized yet
+				time.Sleep(250 * time.Millisecond)
+				continue
+			} else {
+				return emptyT, err
+			}
 		}
 
 		var waiter Future[T]
