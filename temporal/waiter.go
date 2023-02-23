@@ -72,7 +72,15 @@ func AwaitFuture(ctx context.Context, temporal client.Client, workflowSingleKey 
 
 		val, err := temporal.QueryWorkflow(ctx, wfID, runID, fmt.Sprintf("workflow_waiter_%s", key))
 		if err != nil {
-			return err
+			var queryErr *serviceerror.QueryFailed
+
+			if errors.As(err, &queryErr) && strings.Contains(queryErr.Message, "unknown queryType") {
+				// Can be safely ignored, future is not initialized yet
+				time.Sleep(250 * time.Millisecond)
+				continue
+			} else {
+				return err
+			}
 		}
 
 		var waiter Future[struct{}]
