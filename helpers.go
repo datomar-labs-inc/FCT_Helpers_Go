@@ -168,6 +168,23 @@ func Must[R any](returnValue R, err error) R {
 	return returnValue
 }
 
+// Tern implements a ternary operator. If cond is true, a is returned, otherwise b is returned
+func Tern[T any](cond bool, a T, b T) T {
+	if cond {
+		return a
+	}
+
+	return b
+}
+
+func Or[T any](val *T, defaultVal T) T {
+	if val == nil {
+		return defaultVal
+	}
+
+	return *val
+}
+
 func IsNil(i any) bool {
 	if i == nil {
 		return true
