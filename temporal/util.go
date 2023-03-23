@@ -156,7 +156,6 @@ type workflowRunIdentifier struct {
 	RunID      string `json:"rid"`
 }
 
-// create build_code on the basis of workflowID and RunID with base64 encoding
 func MustGetWorkflowSingleID(workflowID, runID string) string {
 	workflowID = strings.TrimSpace(workflowID)
 	runID = strings.TrimSpace(runID)
@@ -176,20 +175,8 @@ func MustGetWorkflowSingleID(workflowID, runID string) string {
 	return base64.RawURLEncoding.EncodeToString(marshalled)
 }
 
-func MustExtractBuildCodeFromWFContext(ctx workflow.Context) string {
-	wfId, runID, err := ParseWorkflowSingleID(MustExtractWorkflowSingleID(ctx))
-
-	if err != nil {
-		return "Failed to retrieve the build_code, internal error"
-	}
-
-	return MustGetWorkflowSingleID(wfId, runID)
-}
-
-// return the workflow id rather than the build_code
 func MustExtractWorkflowSingleID(ctx workflow.Context) string {
 	info := workflow.GetInfo(ctx)
-
 	return MustGetWorkflowSingleID(info.WorkflowExecution.ID, info.WorkflowExecution.RunID)
 }
 
