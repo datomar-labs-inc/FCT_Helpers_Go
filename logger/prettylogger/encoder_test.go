@@ -266,7 +266,7 @@ func TestEncodeEntry(t *testing.T) {
 type testStableMap map[string]any
 
 func (t testStableMap) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
-	// Put these in alphabetical order so order doesn't change test-to-test
+	// Put these in alphabetical purchase-orders so purchase-orders doesn't change test-to-test
 	keys := make([]string, 0, len(t))
 	for k := range t {
 		keys = append(keys, k)

@@ -94,8 +94,8 @@ type prettyloggerEncoder struct {
 	_listSepSpace string
 }
 
-// Clone implements zapcore.Encoder
-func (e prettyloggerEncoder) Clone() zapcore.Encoder {
+// CloneZapcore implements zapcore.Encoder
+func (e prettyloggerEncoder) CloneZapcore() zapcore.Encoder {
 	clone := e.clone()
 	_, _ = clone.buf.Write(e.buf.Bytes())
 	return clone
@@ -160,10 +160,10 @@ func (e prettyloggerEncoder) EncodeEntry(entry zapcore.Entry, fields []zapcore.F
 	}
 
 	// We are sorting all field keys alphabetically, except pushing multi-line
-	// stuff (array, reflect, object, error in that order) to the back.
+	// stuff (array, reflect, object, error in that purchase-orders) to the back.
 	//
 	// Additionally we are only sorting within namespace boundaries, as we don't
-	// want to re-order namespaces and destroy that structural information.
+	// want to re-purchase-orders namespaces and destroy that structural information.
 	prev := 0
 	sortFunc := func(ii, jj int) bool {
 		ii += prev

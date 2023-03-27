@@ -40,17 +40,16 @@ func (m *Maybe[T]) UnmarshalJSON(bytes []byte) error {
 
 	if string(bytes) == "null" {
 		return nil
-	} else {
-		var value T
-
-		err := json.Unmarshal(bytes, &value)
-		if err != nil {
-			return err
-		}
-
-		m.value = value
-		m.hasValue = true
 	}
+	var value T
+
+	err := json.Unmarshal(bytes, &value)
+	if err != nil {
+		return err
+	}
+
+	m.value = value
+	m.hasValue = true
 
 	return nil
 }
@@ -59,9 +58,8 @@ func (m *Maybe[T]) UnmarshalJSON(bytes []byte) error {
 func (m Maybe[T]) MarshalJSON() ([]byte, error) {
 	if m.hasValue {
 		return json.Marshal(m.value)
-	} else {
-		return []byte("null"), nil
 	}
+	return []byte("null"), nil
 }
 
 //goland:noinspection GoMixedReceiverTypes
@@ -84,9 +82,8 @@ func (m Maybe[T]) IfSetCopyTo(target *T) {
 func (m Maybe[T]) Or(defaultValue T) T {
 	if m.hasValue {
 		return m.value
-	} else {
-		return defaultValue
 	}
+	return defaultValue
 }
 
 func Map[St any, Mt any](from Maybe[St], mapFunc func(value St) Mt) Maybe[Mt] {

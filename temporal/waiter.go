@@ -78,9 +78,9 @@ func AwaitFuture(ctx context.Context, temporal client.Client, workflowSingleKey 
 				// Can be safely ignored, future is not initialized yet
 				time.Sleep(250 * time.Millisecond)
 				continue
-			} else {
-				return err
 			}
+			return err
+
 		}
 
 		var waiter Future[struct{}]
@@ -118,9 +118,9 @@ func AwaitTypedFuture[T any](ctx context.Context, temporal client.Client, wfID, 
 				// Can be safely ignored, future is not initialized yet
 				time.Sleep(250 * time.Millisecond)
 				continue
-			} else {
-				return emptyT, err
 			}
+			return emptyT, err
+
 		}
 
 		var waiter Future[T]

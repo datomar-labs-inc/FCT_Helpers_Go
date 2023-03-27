@@ -54,7 +54,7 @@ func New(eType ErrorType, code Code, msg string) *Error {
 }
 
 //revive:disable:cyclomatic The nature of this function makes it thicc
-// Infer will attempt to smartly extract error information into an Error
+// Infer will attempt to intelligently extract error information into an Error
 func Infer(err error) *Error {
 	if err == nil {
 		return nil
@@ -104,114 +104,6 @@ func Infer(err error) *Error {
 	var timeoutErr *temporal.TimeoutError
 	if errors.As(err, &timeoutErr) {
 
-		switch timeoutErr.TimeoutType() {
-		case enums.TIMEOUT_TYPE_SCHEDULE_TO_START, enums.TIMEOUT_TYPE_SCHEDULE_TO_CLOSE:
-			return New(ETTemporal, CodeTimeout, timeoutErr.Error()).
-				WithHTTPCode(http.StatusInternalServerError).
-				WithUnderlying(Infer(timeoutErr.Unwrap()))
-		case enums.TIMEOUT_TYPE_UNSPECIFIED, enums.TIMEOUT_TYPE_HEARTBEAT:
-			return New(ETTemporal, CodeTimeout, timeoutErr.Error()).
-				WithHTTPCode(http.StatusInternalServerError).
-				WithUnderlying(Infer(timeoutErr.Unwrap()))
-		case enums.TIMEOUT_TYPE_START_TO_CLOSE:
-			return New(ETTemporal, CodeTimeout, timeoutErr.Error()).
-				WithHTTPCode(http.StatusInternalServerError).
-				WithUnderlying(Infer(timeoutErr.Unwrap()))
-		default:
-		}
-	}
-
-	var panicErr *temporal.PanicError
-	if errors.As(err, &panicErr) {
-		return New(ETTemporal, CodePanic, panicErr.Error()).
-			WithHTTPCode(http.StatusInternalServerError).
-			WithUnderlying(panicErr)
-	}
-
-	// Check for unmarshal errors
-	var unmarshalTypeError *fiber.UnmarshalTypeError
-	if errors.As(err, &unmarshalTypeError) {
-		return New(ETValidation, CodeInvalidInput, "invalid input").
-			WithHTTPCode(http.StatusBadRequest).
-			WithFieldError(&FieldError{
-				Field:   strcase.ToSnakeWithIgnore(unmarshalTypeError.Field, "."),
-				Message: unmarshalTypeError.Error(),
-			})
-	}
-
-	var validationError validator.ValidationErrors
-	if errors.As(err, &validationError) {
-		fe := New(ETValidation, CodeInvalidInput, "invalid input").
-			WithHTTPCode(http.StatusBadRequest)
-
-		translated := validationError.Translate(valid.UniversalTranslator)
-
-		for field, message := range translated {
-			// field starts with the struct name, followed by a dot, so it should be removed
-			field = strcase.ToSnakeWithIgnore(strings.Join(strings.Split(field, ".")[1:], "."), ".")
-
-			fe = fe.WithFieldError(&FieldError{
-				Field:   field,
-				Message: message,
-			})
-		}
-
-		return fe
-	}
-
-	return &Error{
-		Message:         err.Error(),
-		Type:            ETGeneric,
-		Code:            CodeUnknown,
-		UnderlyingError: err,
-	}
-}
-
-// InferAPIError will attempt to smrtley extract error information into an Error
-func InferAPIError(err error) error {
-	//revive:disable:cyclomatic The nature of this function makes it thicc
-
-	if err == nil {
-		return nil
-	}
-
-	if fctErr, ok := err.(*Error); ok {
-		return fctErr
-	}
-
-	// Check if it's a postgres error
-	pqErr := ExtractPQError(err)
-
-	if pqErr != nil {
-
-		return &Error{
-			Message:         pqErr.Message,
-			Type:            ETDatabase,
-			Code:            CodeUnknown,
-			HTTPCode:        HTTPCodeFromPQError(pqErr),
-			Retry:           RetryFromPQError(pqErr),
-			UnderlyingError: err,
-		}
-	}
-
-	var applicationErr *temporal.ApplicationError
-	if errors.As(err, &applicationErr) {
-		unwrapped := applicationErr.Unwrap()
-
-		if unwrapped != nil {
-			return Infer(applicationErr.Unwrap())
-		}
-
-		return New(ETTemporal, CodeUnknown, applicationErr.Error()).WithUnderlying(applicationErr)
-	}
-
-	var canceledErr *temporal.CanceledError
-	if errors.As(err, &canceledErr) {
-		return New(ETTemporal, CodeUnknown, canceledErr.Error()).WithUnderlying(canceledErr)
-	}
-
-	var timeoutErr *temporal.TimeoutError
-	if errors.As(err, &timeoutErr) {
 		switch timeoutErr.TimeoutType() {
 		case enums.TIMEOUT_TYPE_SCHEDULE_TO_START, enums.TIMEOUT_TYPE_SCHEDULE_TO_CLOSE:
 			return New(ETTemporal, CodeTimeout, timeoutErr.Error()).
