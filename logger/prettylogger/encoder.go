@@ -94,8 +94,8 @@ type prettyloggerEncoder struct {
 	_listSepSpace string
 }
 
-// CloneZapcore implements zapcore.Encoder
-func (e prettyloggerEncoder) CloneZapcore() zapcore.Encoder {
+// Clone implements zapcore.Encoder
+func (e prettyloggerEncoder) Clone() zapcore.Encoder {
 	clone := e.clone()
 	_, _ = clone.buf.Write(e.buf.Bytes())
 	return clone
