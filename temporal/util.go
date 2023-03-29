@@ -319,31 +319,18 @@ func AddSignalHandler[T any](ctx workflow.Context, ss *SignalSwitch, signal stri
 
 func AddUnwrappedSignalHandler[T any](ctx workflow.Context, ss *SignalSwitch, signal string, handler SignalHandler[T]) {
 	ss.Selector.AddReceive(workflow.GetSignalChannel(ctx, signal), func(c workflow.ReceiveChannel, more bool) {
-		signalsHandled := 0
+		var signalValue T
 
-		for more {
-			var signalValue T
+		c.Receive(ctx, &signalValue)
 
-			ok, hasMore := c.ReceiveAsyncWithMoreFlag(&signalValue)
-			if !ok {
-				return
-			}
+		ss.SignalFired = signal
+		ss.handlerDidFire = true
 
-			workflow.GetLogger(ctx).Warn("MORE SIGNALS AVAILABLE", "handled", signalsHandled, "signal", signal)
-
-			more = hasMore
-
-			ss.SignalFired = signal
-			ss.handlerDidFire = true
-
-			err := handler(ctx, signalValue)
-			if err != nil {
-				ss.errChan <- err
-			} else {
-				ss.errChan <- nil
-			}
-
-			signalsHandled++
+		err := handler(ctx, signalValue)
+		if err != nil {
+			ss.errChan <- err
+		} else {
+			ss.errChan <- nil
 		}
 	})
 }
