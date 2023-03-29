@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -221,13 +222,22 @@ type SignalSwitch struct {
 	SignalFired    string
 	errChan        chan error
 	handlerDidFire bool
+
+	wrappedReceiverRegistered bool
+	wrappedHandlerFuncs       map[string]func(workflow.Context, []byte)
 }
 
 func NewSignalSwitch(ctx workflow.Context) *SignalSwitch {
 	return &SignalSwitch{
-		Selector: workflow.NewSelector(ctx),
-		errChan:  make(chan error, 1),
+		Selector:            workflow.NewSelector(ctx),
+		errChan:             make(chan error, 1),
+		wrappedHandlerFuncs: map[string]func(workflow.Context, []byte){},
 	}
+}
+
+type SignalWrapper[T any] struct {
+	SignalType string `json:"signal_type"`
+	Signal     T      `json:"signal"`
 }
 
 func (ss *SignalSwitch) Select(ctx workflow.Context) error {
@@ -240,18 +250,100 @@ func (ss *SignalSwitch) Select(ctx workflow.Context) error {
 	return <-ss.errChan
 }
 
+const SignalSwitchSignalType = "signal_switch_signal"
+
+func WrapSignal[T any](signalType string, signal T) SignalWrapper[T] {
+	return SignalWrapper[T]{
+		SignalType: signalType,
+		Signal:     signal,
+	}
+}
+
 func AddSignalHandler[T any](ctx workflow.Context, ss *SignalSwitch, signal string, handler SignalHandler[T]) {
-	ss.Selector.AddReceive(workflow.GetSignalChannel(ctx, signal), func(c workflow.ReceiveChannel, more bool) {
-		var signalValue T
-		c.Receive(ctx, &signalValue)
+	if !ss.wrappedReceiverRegistered {
+		ss.Selector.AddReceive(workflow.GetSignalChannel(ctx, SignalSwitchSignalType), func(c workflow.ReceiveChannel, more bool) {
+			var temp any
+			var wrappedSignalType string
+
+			c.Receive(ctx, &temp)
+
+			switch temp.(type) {
+			case map[string]any:
+				if signalType, ok := temp.(map[string]any)["signal_type"].(string); ok {
+					wrappedSignalType = signalType
+				} else {
+					ss.errChan <- fmt.Errorf("signal type is not a string")
+					return
+				}
+			default:
+				ss.errChan <- fmt.Errorf("unexpected signal type %T", temp)
+				return
+			}
+
+			if handlerFunc, ok := ss.wrappedHandlerFuncs[wrappedSignalType]; ok {
+				signalValueJSON, err := json.Marshal(temp)
+				if err != nil {
+					ss.errChan <- err
+					return
+				}
+
+				handlerFunc(ctx, signalValueJSON)
+			} else {
+				ss.errChan <- fmt.Errorf("no handler for signal %s", ss.SignalFired)
+			}
+		})
+
+		ss.wrappedReceiverRegistered = true
+	}
+
+	ss.wrappedHandlerFuncs[signal] = func(ctx workflow.Context, signalValueJSON []byte) {
+		var signalValue SignalWrapper[T]
+
+		err := json.Unmarshal(signalValueJSON, &signalValue)
+		if err != nil {
+			ss.errChan <- err
+			return
+		}
+
 		ss.SignalFired = signal
 		ss.handlerDidFire = true
 
-		err := handler(ctx, signalValue)
+		err = handler(ctx, signalValue.Signal)
 		if err != nil {
 			ss.errChan <- err
 		} else {
 			ss.errChan <- nil
+		}
+	}
+}
+
+func AddUnwrappedSignalHandler[T any](ctx workflow.Context, ss *SignalSwitch, signal string, handler SignalHandler[T]) {
+	ss.Selector.AddReceive(workflow.GetSignalChannel(ctx, signal), func(c workflow.ReceiveChannel, more bool) {
+		signalsHandled := 0
+
+		for more {
+			var signalValue T
+
+			ok, hasMore := c.ReceiveAsyncWithMoreFlag(&signalValue)
+			if !ok {
+				return
+			}
+
+			workflow.GetLogger(ctx).Warn("MORE SIGNALS AVAILABLE", "handled", signalsHandled, "signal", signal)
+
+			more = hasMore
+
+			ss.SignalFired = signal
+			ss.handlerDidFire = true
+
+			err := handler(ctx, signalValue)
+			if err != nil {
+				ss.errChan <- err
+			} else {
+				ss.errChan <- nil
+			}
+
+			signalsHandled++
 		}
 	})
 }
