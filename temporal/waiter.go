@@ -110,23 +110,26 @@ func AwaitTypedFuture[T any](ctx context.Context, temporal client.Client, wfID, 
 			return emptyT, ctxErr
 		}
 
+		if ctxErr != nil {
+			return emptyT, ctxErr
+		}
+
 		encodedValue, err := temporal.QueryWorkflow(ctx, wfID, runID, fmt.Sprintf("workflow_waiter_%s", key))
 		if err != nil {
 			var queryErr *serviceerror.QueryFailed
-
 			if errors.As(err, &queryErr) && strings.Contains(queryErr.Message, "unknown queryType") {
 				// Can be safely ignored, future is not initialized yet
 				time.Sleep(250 * time.Millisecond)
 				continue
 			}
-			return emptyT, err
 
+			return emptyT, err
 		}
 
 		var waiter Future[T]
 
 		err = encodedValue.Get(&waiter)
-		if ctxErr != nil {
+		if err != nil {
 			return emptyT, err
 		}
 
