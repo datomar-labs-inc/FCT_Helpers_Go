@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/friendsofgo/errors"
 	"strings"
 	"time"
 
@@ -255,7 +256,7 @@ func (ss *SignalSwitch) Select(ctx workflow.Context) error {
 	ss.Selector.Select(ctx)
 
 	if !ss.handlerDidFire {
-		return nil
+		return errors.New("no handler fired")
 	}
 
 	return <-ss.errChan
