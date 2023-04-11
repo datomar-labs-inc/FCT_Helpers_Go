@@ -75,6 +75,17 @@ var (
 
 const StandardHeartbeatSpacing = 10 * time.Second
 
+func ActivitySmall[T any](ctx workflow.Context, activity any, args ...any) (T, error) {
+	var result T
+
+	err := workflow.ExecuteActivity(ActivityCtxSmall(ctx), activity, args...).Get(ctx, &result)
+	if err != nil {
+		return result, ferr.Wrap(err)
+	}
+
+	return result, nil
+}
+
 // ExecuteActivity is a replacement/wrapper for Temporal's built in workflow.ExecuteActivity function, but it allows
 // for easier capturing of result values using generics
 func ExecuteActivity[T any](ctx workflow.Context, activity any, args ...any) (*T, error) {
