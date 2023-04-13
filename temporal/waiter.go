@@ -98,9 +98,9 @@ func AwaitFuture(ctx context.Context, temporal client.Client, workflowSingleKey 
 		if waiter.Finalized {
 			if futureErr, hasErr := waiter.Error.Value(); hasErr {
 				return errors.New(futureErr.Err)
-			} else {
-				return nil
 			}
+
+			return nil
 		}
 
 		time.Sleep(250 * time.Millisecond)
