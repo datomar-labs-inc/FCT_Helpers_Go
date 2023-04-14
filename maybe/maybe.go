@@ -10,7 +10,7 @@ type Maybe[T any] struct {
 }
 
 // Ish is any item that can have a value or not
-// this interface is used to implement some nice helpers for multiple types of mabies
+// this interface is used to implement some nice helpers for multiple types of maybies
 type Ish interface {
 	HasValue() bool
 }
@@ -26,6 +26,10 @@ func (m Maybe[T]) Value() (T, bool) {
 	}
 
 	return m.value, true
+}
+
+func (m Maybe[T]) GetValue() T {
+	return m.value
 }
 
 // UnmarshalJSON
