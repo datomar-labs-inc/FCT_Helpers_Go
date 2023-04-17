@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/datomar-labs-inc/FCT_Helpers_Go/ferr/valid"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/iancoleman/strcase"
 	"go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/temporal"
-	"gopkg.in/go-playground/validator.v9"
 	"net/http"
 	"strings"
 )
