@@ -2,6 +2,7 @@ package maybe
 
 import (
 	"encoding/json"
+	"reflect"
 )
 
 type Maybe[T any] struct {
@@ -13,6 +14,10 @@ type Maybe[T any] struct {
 // this interface is used to implement some nice helpers for multiple types of maybies
 type Ish interface {
 	HasValue() bool
+}
+
+type maybeValidatorValue interface {
+	validatorValue() (any, bool)
 }
 
 //goland:noinspection GoMixedReceiverTypes
@@ -28,8 +33,8 @@ func (m Maybe[T]) Value() (T, bool) {
 	return m.value, true
 }
 
-func (m Maybe[T]) GetValue() T {
-	return m.value
+func (m Maybe[T]) validatorValue() (any, bool) {
+	return m.Value()
 }
 
 // UnmarshalJSON
@@ -135,4 +140,19 @@ func Empty[T any]() Maybe[T] {
 	return Maybe[T]{
 		hasValue: false,
 	}
+}
+
+func ValidateValuer(field reflect.Value) any {
+	// Try to cast as a maybe
+	if field.Kind() == reflect.Struct {
+		if castedMaybe, ok := field.Interface().(maybeValidatorValue); ok {
+			if val, ok := castedMaybe.validatorValue(); ok {
+				return val
+			}
+		}
+
+		return nil
+	}
+
+	return nil
 }

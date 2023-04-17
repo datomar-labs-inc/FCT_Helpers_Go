@@ -48,7 +48,7 @@ func NewDev() *LogWrapper {
 	)).With(zap.Namespace("@payload"))
 }
 
-// NewDevTool only logs warnings/errors
+// NewDevTool only logs warnings/errors/info
 func NewDevTool() *LogWrapper {
 	ec := prettylogger.NewEncoderConfig()
 	ec.CallerKey = "caller"
@@ -58,7 +58,7 @@ func NewDevTool() *LogWrapper {
 	return zap.New(zapcore.NewCore(
 		enc,
 		os.Stdout,
-		zapcore.WarnLevel,
+		zapcore.InfoLevel,
 	)).With(zap.Namespace("@payload"))
 }
 

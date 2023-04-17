@@ -2,12 +2,13 @@ package valid
 
 import (
 	"context"
+	"github.com/datomar-labs-inc/FCT_Helpers_Go/maybe"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
+	"github.com/go-playground/validator/v10/non-standard/validators"
+	en2 "github.com/go-playground/validator/v10/translations/en"
 	"github.com/volatiletech/null/v8"
-	"gopkg.in/go-playground/validator.v9"
-	"gopkg.in/go-playground/validator.v9/non-standard/validators"
-	en2 "gopkg.in/go-playground/validator.v9/translations/en"
 	"reflect"
 	"regexp"
 )
@@ -37,6 +38,10 @@ func init() {
 
 	// register all sql.Null* types to use the ValidateValuer CustomTypeFunc
 	validate.RegisterCustomTypeFunc(ValidateNullString, null.String{}, &null.String{})
+
+	// TODO register all maybe.Maybe types to use the ValidateValuer CustomTypeFunc
+	validate.RegisterCustomTypeFunc(maybe.ValidateValuer, maybe.Maybe[string]{}, &maybe.Maybe[int]{})
+
 	_ = validate.RegisterValidation("notblank", validators.NotBlank)
 
 	_ = en2.RegisterDefaultTranslations(validate, trans)
