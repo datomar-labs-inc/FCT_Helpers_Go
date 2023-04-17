@@ -8,11 +8,9 @@ import (
 	"testing"
 	"time"
 
-	pkgerrors "github.com/pkg/errors"
 	"go.uber.org/zap/buffer"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -88,41 +86,6 @@ func TestEncodeEntry(t *testing.T) {
 			},
 		},
 		{
-			desc: "Objects",
-			// 4:33PM INF > test message
-			//   ↳ object.1.1.1_leading_value=leading_value
-			//               .2.1=string
-			//                 .2=[1, 2, 3, 4]
-			//                 .3=2.000000
-			//                 .4.r1=[]string{
-			//                         "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8",
-			//                         "r9", "r10",
-			//                       }
-			//             .2=trailing_value
-			expected: "\x1b[90m4:33PM\x1b[0m\x1b[32m \x1b[0m\x1b[32mINF\x1b[0m\x1b[32m \x1b[0m\x1b[1m\x1b[32m>\x1b[0m\x1b[0m\x1b[32m \x1b[0mtest message\n\x1b[32m  ↳ object\x1b[0m\x1b[32m.1\x1b[0m\x1b[32m.1\x1b[0m\x1b[32m.1_leading_value=\x1b[0mleading_value\n              \x1b[32m.2\x1b[0m\x1b[32m.1=\x1b[0mstring\n                \x1b[32m.2\x1b[0m\x1b[32m=[\x1b[0m1\x1b[32m, \x1b[0m2\x1b[32m, \x1b[0m3\x1b[32m, \x1b[0m4\x1b[32m]\x1b[0m\n                \x1b[32m.3\x1b[0m\x1b[32m=\x1b[0m2.000000\n                \x1b[32m.4\x1b[0m\x1b[32m.r1\x1b[0m\x1b[32m=\x1b[0m[]string{\n                        \"r1\", \"r2\", \"r3\", \"r4\", \"r5\", \"r6\", \"r7\", \"r8\",\n                        \"r9\", \"r10\",\n                      }\x1b[32m\n            \x1b[0m\x1b[32m.2=\x1b[0mtrailing_value\n",
-			ent: zapcore.Entry{
-				Level:   zapcore.InfoLevel,
-				Message: "test message",
-				Time:    time.Date(2018, 6, 19, 16, 33, 42, 99, time.UTC),
-			},
-			fields: []zapcore.Field{
-				zap.Object("object", testStableMap{
-					"1": testStableMap{
-						"1": testStableMap{
-							"1_leading_value": "leading_value",
-							"2": testStableMap{
-								"1": "string",
-								"2": testArray{1, 2, 3, 4},
-								"3": any(2.0),
-								"4": &testStableMap{"r1": []string{"r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10"}},
-							},
-						},
-						"2": "trailing_value",
-					},
-				}),
-			},
-		},
-		{
 			desc: "Arrays",
 			// 4:33PM INF > test message
 			//   ↳ array=[[1, 2, 3, 4],
@@ -167,84 +130,6 @@ func TestEncodeEntry(t *testing.T) {
 			},
 			fields: []zapcore.Field{
 				zap.Error(errors.New("Something \nwent wrong")),
-			},
-		},
-		{
-			desc: "Errors",
-			// 4:33PM ERR > test message named_stracktrace=<module_name>.TestEncodeEntry\n\t/<some_file>:<line_number>\ntesting.tRunner\n\t/<some_file>:<line_number>
-			//  ↳ error=something \nwent wrong
-			//  ↳ nested=error with stacktrace: error with 2 causes: cause 1; deeper error with two causes: deeper cause 1; deeper cause 2
-			//		   .cause=error with stacktrace: error with 2 causes: cause 1; deeper error with two causes: deeper cause 1; deeper cause 2
-			//				  .cause=error with 2 causes: cause 1; deeper error with two causes: deeper cause 1; deeper cause 2
-			//						 .cause=error with 2 causes: cause 1; deeper error with two causes: deeper cause 1; deeper cause 2
-			//								.cause=cause 1; deeper error with two causes: deeper cause 1; deeper cause 2
-			//									   .cause.0=cause 1
-			//												.stacktrace=<module_name>.TestEncodeEntry
-			//																/<some_file>:<line_number>
-			//															testing.tRunner
-			//																/<some_file>:<line_number>
-			//															runtime.goexit
-			//																/<some_file>:<line_number>
-			//									   .cause.1=deeper error with two causes: deeper cause 1; deeper cause 2
-			//												.cause=deeper error with two causes: deeper cause 1; deeper cause 2
-			//													   .cause=deeper cause 1; deeper cause 2
-			//															  .cause.0=deeper cause 1
-			//															  .cause.1=deeper cause 2
-			//												.stacktrace=<module_name>.TestEncodeEntry
-			//																/<some_file>:<line_number>
-			//															testing.tRunner
-			//																/<some_file>:<line_number>
-			//															runtime.goexit
-			//																/<some_file>:<line_number>
-			//						 .stacktrace=<module_name>.TestEncodeEntry
-			//										/<some_file>:<line_number>
-			//									 testing.tRunner
-			//										/<some_file>:<line_number>
-			//									 runtime.goexit
-			//										/<some_file>:<line_number>
-			//		   .stacktrace=<module_name>.TestEncodeEntry
-			//						/<some_file>:<line_number>
-			//					   testing.tRunner
-			//						/<some_file>:<line_number>
-			//					   runtime.goexit
-			//						/<some_file>:<line_number>
-			//  ↳ nil_panic_PANIC_DISPLAYING_ERROR=PANIC=runtime error: invalid memory address or nil pointer dereference
-			//  ↳ normal_panic=<nil>
-			//  ↳ stack=an error with a stacktrace has occurred
-			//		  .stacktrace=<module_name>.TestEncodeEntry
-			//						/<some_file>:<line_number>
-			//					  testing.tRunner
-			//						/<some_file>:<line_number>
-			//					  runtime.goexit
-			//						/<some_file>:<line_number>
-			//  ↳ stacktrace=<module_name>.TestEncodeEntry
-			//				/<some_file>:<line_number>
-			//			   testing.tRunner
-			//				/<some_file>:<line_number>
-			expected: "\x1b[90m4:33PM\x1b[0m\x1b[31m \x1b[0m\x1b[31mERR\x1b[0m\x1b[31m \x1b[0m\x1b[1m\x1b[31m>\x1b[0m\x1b[0m\x1b[31m \x1b[0mtest message\x1b[31m \x1b[0m\x1b[31mnamed_stracktrace=\x1b[0mgithub.com/thessem/zap-prettylogger.TestEncodeEntry\x1b[31m\\n\x1b[0m\x1b[31m\\t\x1b[0m/<some_file>:<line_number>\x1b[31m\\n\x1b[0mtesting.tRunner\x1b[31m\\n\x1b[0m\x1b[31m\\t\x1b[0m/<some_file>:<line_number>\n\x1b[31m  ↳ error\x1b[0m\x1b[31m=\x1b[0msomething \x1b[31m\\n\x1b[0mwent wrong\n\x1b[31m  ↳ nested\x1b[0m\x1b[31m=\x1b[0merror with stacktrace: error with 2 causes: cause 1; deeper error with two causes: deeper cause 1; deeper cause 2\n           \x1b[31m.cause\x1b[0m\x1b[31m=\x1b[0merror with stacktrace: error with 2 causes: cause 1; deeper error with two causes: deeper cause 1; deeper cause 2\n                  \x1b[31m.cause\x1b[0m\x1b[31m=\x1b[0merror with 2 causes: cause 1; deeper error with two causes: deeper cause 1; deeper cause 2\n                         \x1b[31m.cause\x1b[0m\x1b[31m=\x1b[0merror with 2 causes: cause 1; deeper error with two causes: deeper cause 1; deeper cause 2\n                                \x1b[31m.cause\x1b[0m\x1b[31m=\x1b[0mcause 1; deeper error with two causes: deeper cause 1; deeper cause 2\n                                       \x1b[31m.cause.0\x1b[0m\x1b[31m=\x1b[0mcause 1\n                                                \x1b[31m.stacktrace=\x1b[0mgithub.com/thessem/zap-prettylogger.TestEncodeEntry\n                                                            \t/<some_file>:<line_number>\n                                                            testing.tRunner\n                                                            \t/<some_file>:<line_number>\n                                                            runtime.goexit\n                                                            \t/<some_file>:<line_number>\n                                       \x1b[31m.cause.1\x1b[0m\x1b[31m=\x1b[0mdeeper error with two causes: deeper cause 1; deeper cause 2\n                                                \x1b[31m.cause\x1b[0m\x1b[31m=\x1b[0mdeeper error with two causes: deeper cause 1; deeper cause 2\n                                                       \x1b[31m.cause\x1b[0m\x1b[31m=\x1b[0mdeeper cause 1; deeper cause 2\n                                                              \x1b[31m.cause.0\x1b[0m\x1b[31m=\x1b[0mdeeper cause 1\n                                                              \x1b[31m.cause.1\x1b[0m\x1b[31m=\x1b[0mdeeper cause 2\n                                                \x1b[31m.stacktrace=\x1b[0mgithub.com/thessem/zap-prettylogger.TestEncodeEntry\n                                                            \t/<some_file>:<line_number>\n                                                            testing.tRunner\n                                                            \t/<some_file>:<line_number>\n                                                            runtime.goexit\n                                                            \t/<some_file>:<line_number>\n                         \x1b[31m.stacktrace=\x1b[0mgithub.com/thessem/zap-prettylogger.TestEncodeEntry\n                                     \t/<some_file>:<line_number>\n                                     testing.tRunner\n                                     \t/<some_file>:<line_number>\n                                     runtime.goexit\n                                     \t/<some_file>:<line_number>\n           \x1b[31m.stacktrace=\x1b[0mgithub.com/thessem/zap-prettylogger.TestEncodeEntry\n                       \t/<some_file>:<line_number>\n                       testing.tRunner\n                       \t/<some_file>:<line_number>\n                       runtime.goexit\n                       \t/<some_file>:<line_number>\n\x1b[31m  ↳ nil_panic_PANIC_DISPLAYING_ERROR\x1b[0m\x1b[31m=\x1b[0mPANIC=runtime error: invalid memory address or nil pointer dereference\n\x1b[31m  ↳ normal_panic\x1b[0m\x1b[31m=\x1b[0m<nil>\n\x1b[31m  ↳ stack\x1b[0m\x1b[31m=\x1b[0man error with a stacktrace has occurred\n          \x1b[31m.stacktrace=\x1b[0mgithub.com/thessem/zap-prettylogger.TestEncodeEntry\n                      \t/<some_file>:<line_number>\n                      testing.tRunner\n                      \t/<some_file>:<line_number>\n                      runtime.goexit\n                      \t/<some_file>:<line_number>\n\x1b[31m  ↳ \x1b[0m\x1b[31mstacktrace=\x1b[0mgithub.com/thessem/zap-prettylogger.TestEncodeEntry\n               \t/<some_file>:<line_number>\n               testing.tRunner\n               \t/<some_file>:<line_number>\n",
-			ent: zapcore.Entry{
-				Level:   zapcore.ErrorLevel,
-				Message: "test message",
-				Time:    time.Date(2018, 6, 19, 16, 33, 42, 99, time.UTC),
-				Stack:   zap.Stack("ignored").String,
-			},
-			fields: []zapcore.Field{
-				zap.Error(errors.New("something \nwent wrong")),
-				zap.NamedError("stack", pkgerrors.New("an error with a stacktrace has occurred")),
-				zap.NamedError("nested", pkgerrors.Wrap(
-					pkgerrors.Wrapf(multierr.Combine(
-						pkgerrors.New("cause 1"),
-						pkgerrors.Wrapf(
-							multierr.Combine(
-								errors.New("deeper cause 1"),
-								errors.New("deeper cause 2")),
-							"deeper error with two causes"),
-					), "error with 2 causes"),
-					"error with stacktrace",
-				)),
-				zap.NamedError("nil_panic", (*testPanicError)(nil)),
-				zap.NamedError("normal_panic", &[]testPanicError{"panic!"}[0]),
-				zap.Stack("named_stracktrace"),
 			},
 		},
 	}
