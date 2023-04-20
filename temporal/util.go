@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/friendsofgo/errors"
+	"go.temporal.io/api/enums/v1"
 	"strings"
 	"time"
 
@@ -66,6 +67,10 @@ var (
 	ActivityCtxSmall = func(ctx workflow.Context) workflow.Context {
 		return ActivityCtx(ctx, ActivityTimeoutS, ActivityMaxRetriesS)
 	}
+	ActivityCtxMedium = func(ctx workflow.Context) workflow.Context {
+		return ActivityCtx(ctx, ActivityTimeoutM, ActivityMaxRetriesM)
+	}
+
 	LocalActivityCtxSmall = func(ctx workflow.Context) workflow.Context {
 		return LocalActivityCtx(ctx, ActivityTimeoutS, ActivityMaxRetriesS)
 	}
@@ -80,6 +85,39 @@ func ActivitySmall[T any](ctx workflow.Context, activity any, args ...any) (T, e
 	var result T
 
 	err := workflow.ExecuteActivity(ActivityCtxSmall(ctx), activity, args...).Get(ctx, &result)
+	if err != nil {
+		return result, ferr.Wrap(err)
+	}
+
+	return result, nil
+}
+
+func ActivityMedium[T any](ctx workflow.Context, activity any, args ...any) (T, error) {
+	var result T
+
+	err := workflow.ExecuteActivity(ActivityCtxMedium(ctx), activity, args...).Get(ctx, &result)
+	if err != nil {
+		return result, ferr.Wrap(err)
+	}
+
+	return result, nil
+}
+
+func ActivityLarge[T any](ctx workflow.Context, activity any, args ...any) (T, error) {
+	var result T
+
+	err := workflow.ExecuteActivity(ActivityCtx(ctx, ActivityTimeoutL, ActivityMaxRetriesL), activity, args...).Get(ctx, &result)
+	if err != nil {
+		return result, ferr.Wrap(err)
+	}
+
+	return result, nil
+}
+
+func ActivityUnlimited[T any](ctx workflow.Context, activity any, args ...any) (T, error) {
+	var result T
+
+	err := workflow.ExecuteActivity(ActivityCtx(ctx, ActivityTimeoutXL, ActivityMaxRetriesUnlimited), activity, args...).Get(ctx, &result)
 	if err != nil {
 		return result, ferr.Wrap(err)
 	}
@@ -147,10 +185,10 @@ func ActivityCtxHB(ctx workflow.Context, timeout time.Duration, retry *temporal.
 	})
 }
 
-func ExecuteWorkflowSync[T any](ctx context.Context, temporalClient client.Client, options client.StartWorkflowOptions, workflow any, args ...any) (result *T, workfowID string, runID string, err error) {
+func ExecuteWorkflowSync[T any](ctx context.Context, temporalClient client.Client, options client.StartWorkflowOptions, workflow any, args ...any) (result T, workfowID string, runID string, err error) {
 	wfRun, err := temporalClient.ExecuteWorkflow(ctx, options, workflow, args...)
 	if err != nil {
-		return nil, "", "", ferr.Wrap(err)
+		return result, "", "", ferr.Wrap(err)
 	}
 
 	workfowID = wfRun.GetID()
@@ -227,6 +265,16 @@ func Receive[T any](ctx workflow.Context, ch workflow.ReceiveChannel) *T {
 	_ = ch.Receive(ctx, &result)
 
 	return &result
+}
+
+func IsActivityHardFailedErr(err error) bool {
+	var activityErr *temporal.ActivityError
+
+	if errors.As(err, &activityErr) {
+		return activityErr.RetryState() == enums.RETRY_STATE_MAXIMUM_ATTEMPTS_REACHED
+	}
+
+	return false
 }
 
 type SignalSwitch struct {
