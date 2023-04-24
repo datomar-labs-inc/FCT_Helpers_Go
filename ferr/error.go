@@ -154,6 +154,8 @@ func Infer(err error) *Error {
 				Field:   field,
 				Message: message,
 			})
+
+			fe.Message += fmt.Sprintf("\n- %s", message)
 		}
 
 		return fe
