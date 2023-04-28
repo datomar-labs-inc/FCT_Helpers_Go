@@ -318,3 +318,7 @@ func WaitForSomethingToHappen(ctx context.Context, timeoutSeconds int, checker f
 		}
 	}
 }
+
+func RandFromSlice[T any](slice []T) T {
+	return slice[rand.Intn(len(slice))]
+}
