@@ -81,7 +81,7 @@ func AwaitFuture(ctx context.Context, temporal client.Client, workflowSingleKey 
 
 			if errors.As(err, &queryErr) && strings.Contains(queryErr.Message, "unknown queryType") {
 				// Can be safely ignored, future is not initialized yet
-				time.Sleep(50 * time.Millisecond)
+				time.Sleep(250 * time.Millisecond)
 				continue
 			}
 			return err
@@ -128,7 +128,7 @@ func AwaitTypedFuture[T any](ctx context.Context, temporal client.Client, wfID, 
 			var queryErr *serviceerror.QueryFailed
 			if errors.As(err, &queryErr) && strings.Contains(queryErr.Message, "unknown queryType") {
 				// Can be safely ignored, future is not initialized yet
-				time.Sleep(50 * time.Millisecond)
+				time.Sleep(250 * time.Millisecond)
 				continue
 			}
 
