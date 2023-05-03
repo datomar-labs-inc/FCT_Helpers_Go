@@ -157,9 +157,7 @@ func AwaitFuture(ctx context.Context, resolver FutureResolver, workflowSingleKey
 	wfID, runID := MustParseWorkflowSingleID(workflowSingleKey)
 
 	dataBytes, err := resolver.AwaitContextTimeout(ctx, fmt.Sprintf("%s:%s", wfID, key), 5*time.Second)
-	if err != nil {
-		// Ignore error and continue
-	} else {
+	if err == nil {
 		var output Future[struct{}]
 
 		err = json.Unmarshal(dataBytes, &output)
@@ -219,9 +217,7 @@ func AwaitTypedFuture[T any](ctx context.Context, resolver FutureResolver, wfID,
 	var emptyT T
 
 	dataBytes, err := resolver.AwaitContextTimeout(ctx, fmt.Sprintf("%s:%s", wfID, key), 5*time.Second)
-	if err != nil {
-		// Ignore error and continue
-	} else {
+	if err == nil {
 		var output Future[T]
 
 		err = json.Unmarshal(dataBytes, &output)
