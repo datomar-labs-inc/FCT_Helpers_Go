@@ -48,7 +48,10 @@ func (ws *WebhookSender) send(url string, webhook *Webhook) ([]byte, error) {
 	}
 
 	hash := hmac.New(sha1.New, ws.key)
-	hash.Write(jsonBytes)
+	_, err = hash.Write(jsonBytes)
+	if err != nil {
+		return nil, err
+	}
 
 	hashString := hex.EncodeToString(hash.Sum(nil))
 

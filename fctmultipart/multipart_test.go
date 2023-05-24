@@ -105,5 +105,6 @@ func TestMultipartForm(t *testing.T) {
 		return
 	}
 
-	fmt.Println(string(formBody))
+	_, _ = fmt.Println(string(formBody))
+
 }

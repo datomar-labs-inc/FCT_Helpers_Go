@@ -74,7 +74,10 @@ func (wh *WebhookHandler) FiberMiddleware(c *fiber.Ctx) error {
 
 func (wh *WebhookHandler) verifyBody(body []byte, expectedHash string) bool {
 	hash := hmac.New(sha1.New, wh.key)
-	hash.Write(body)
+	_, err := hash.Write(body)
+	if err != nil {
+		return false
+	}
 
 	hashString := hex.EncodeToString(hash.Sum(nil))
 

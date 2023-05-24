@@ -68,7 +68,7 @@ func (m *MultipartForm) startWait() {
 		m.wg.Wait()
 
 		close(m.writeMe)
-		m.close()
+		_ = m.close()
 	}()
 }
 
