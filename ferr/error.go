@@ -141,7 +141,7 @@ func Infer(err error) *Error {
 
 	var validationError validator.ValidationErrors
 	if errors.As(err, &validationError) {
-		fe := New(ETValidation, CodeInvalidInput, "invalid input").
+		fe := New(ETValidation, CodeInvalidInput, "Your input was invalid.").
 			WithHTTPCode(http.StatusBadRequest)
 
 		translated := validationError.Translate(valid.UniversalTranslator)

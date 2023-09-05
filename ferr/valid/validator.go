@@ -34,6 +34,11 @@ func init() {
 		panic(err)
 	}
 
+	err = validate.RegisterValidation("isempty", validateStringIsEmpty, false)
+	if err != nil {
+		panic(err)
+	}
+
 	simpleTextRegex = regexp.MustCompile(`^[\d\sa-zA-Z\-._]+$`)
 
 	// register all sql.Null* types to use the ValidateValuer CustomTypeFunc
@@ -68,4 +73,16 @@ func ValidateNullString(field reflect.Value) any {
 func validateSimpleText(fl validator.FieldLevel) bool {
 	str := fl.Field().String()
 	return simpleTextRegex.MatchString(str)
+}
+
+func validateSimpleTextOrEmpty(fl validator.FieldLevel) bool {
+	str := fl.Field().String()
+	if str == "" {
+		return true
+	}
+	return simpleTextRegex.MatchString(str)
+}
+
+func validateStringIsEmpty(fl validator.FieldLevel) bool {
+	return fl.Field().String() == ""
 }
