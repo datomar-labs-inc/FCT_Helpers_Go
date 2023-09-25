@@ -45,7 +45,7 @@ func SetupTemporal(config *TemporalSetupConfig, logger *lggr.LogWrapper) client.
 			}
 
 			if !strings.Contains(err.Error(), "not found") {
-				logger.Error(fmt.Sprintf("temporal error: %s", err))
+				logger.Error(fmt.Sprintf("Experienced temporal error during setup, panicking: %s", err))
 				panic(err)
 			}
 		}
@@ -56,75 +56,13 @@ func SetupTemporal(config *TemporalSetupConfig, logger *lggr.LogWrapper) client.
 
 //revive:disable:cyclomatic This is fine
 func setupTemporalInternal(config *TemporalSetupConfig, logger *lggr.LogWrapper) (client.Client, error) {
-	var logg TemporalZapLogger
-
 	temporalLogger := TemporalZapLogger{logger: logger.WithOptions(zap.AddCallerSkip(4)).With(zap.Namespace("@temporal"))}
 
 	if !config.SkipNamespaceCreation {
-		// First, ensure the desired namespace exists
-		nsc, err := client.NewNamespaceClient(attachTracer(client.Options{
-			HostPort: config.Endpoint,
-			Logger:   logg,
-		}))
+		err := createNamespace(config, &temporalLogger)
 		if err != nil {
 			return nil, ferr.Wrap(err)
 		}
-
-		_, err = nsc.Describe(context.Background(), config.Namespace)
-		if err != nil {
-			namespaceNotFound := false
-
-			if _, ok := err.(*serviceerror.NotFound); ok {
-				namespaceNotFound = true
-			}
-
-			if _, ok := err.(*serviceerror.NamespaceNotFound); ok {
-				namespaceNotFound = true
-			}
-
-			if namespaceNotFound {
-				// Need to create namespace
-				err = nsc.Register(context.Background(), &workflowservice.RegisterNamespaceRequest{
-					Namespace:                        config.Namespace,
-					Description:                      config.NamespaceDescription,
-					WorkflowExecutionRetentionPeriod: DurPtr(24 * 7 * time.Hour), // Save workflow execution logs for 1 week
-					IsGlobalNamespace:                false,
-				})
-				if err != nil {
-					return nil, ferr.Wrap(err)
-				}
-
-				logger.Info("Waiting after initial temporal namespace creation")
-				time.Sleep(30 * time.Second)
-
-				// Poll for workspace creation
-				for {
-					_, err = nsc.Describe(context.Background(), config.Namespace)
-					if err != nil {
-						if _, ok := err.(*serviceerror.NotFound); ok {
-							// Wait after namespace registration to give temporal a chance to catch up
-							time.Sleep(1 * time.Second)
-							continue
-						}
-
-						if _, ok := err.(*serviceerror.NamespaceNotFound); ok {
-							// Wait after namespace registration to give temporal a chance to catch up
-							time.Sleep(1 * time.Second)
-							continue
-						}
-
-						return nil, ferr.Wrap(err)
-					}
-
-					break
-				}
-			} else {
-				return nil, ferr.Wrap(err)
-			}
-		}
-
-		// Close the namespace client, it is no longer needed
-		nsc.Close()
 	}
 
 	c, err := client.Dial(client.Options{
@@ -134,12 +72,82 @@ func setupTemporalInternal(config *TemporalSetupConfig, logger *lggr.LogWrapper)
 		Logger:             temporalLogger,
 	})
 	if err != nil {
+		logger.Error("could not connect to temporal via dial, panicking", zap.Error(err))
 		panic(err)
 	}
 
 	temporalClient = c
 
 	return temporalClient, nil
+}
+
+func createNamespace(config *TemporalSetupConfig, temporalLogger *TemporalZapLogger) error {
+	// First, ensure the desired namespace exists
+	namespaceClient, err := client.NewNamespaceClient(attachTracer(client.Options{
+		HostPort: config.Endpoint,
+		Logger:   temporalLogger,
+	}))
+	if err != nil {
+		return ferr.Wrap(err)
+	}
+
+	_, err = namespaceClient.Describe(context.Background(), config.Namespace)
+	if err != nil {
+		namespaceNotFound := false
+
+		if _, ok := err.(*serviceerror.NotFound); ok {
+			namespaceNotFound = true
+		}
+
+		if _, ok := err.(*serviceerror.NamespaceNotFound); ok {
+			namespaceNotFound = true
+		}
+
+		if namespaceNotFound {
+			// Need to create namespace
+			err = namespaceClient.Register(context.Background(), &workflowservice.RegisterNamespaceRequest{
+				Namespace:                        config.Namespace,
+				Description:                      config.NamespaceDescription,
+				WorkflowExecutionRetentionPeriod: DurPtr(24 * 7 * time.Hour), // Save workflow execution logs for 1 week
+				IsGlobalNamespace:                false,
+			})
+			if err != nil {
+				return ferr.Wrap(err)
+			}
+
+			temporalLogger.Info("Waiting after initial temporal namespace creation")
+			time.Sleep(30 * time.Second)
+
+			// Poll for workspace creation
+			for {
+				_, err = namespaceClient.Describe(context.Background(), config.Namespace)
+				if err != nil {
+					if _, ok := err.(*serviceerror.NotFound); ok {
+						// Wait after namespace registration to give temporal a chance to catch up
+						time.Sleep(1 * time.Second)
+						continue
+					}
+
+					if _, ok := err.(*serviceerror.NamespaceNotFound); ok {
+						// Wait after namespace registration to give temporal a chance to catch up
+						time.Sleep(1 * time.Second)
+						continue
+					}
+
+					return ferr.Wrap(err)
+				}
+
+				break
+			}
+		} else {
+			return ferr.Wrap(err)
+		}
+	}
+
+	// Close the namespace client, it is no longer needed
+	namespaceClient.Close()
+
+	return nil
 }
 
 func attachTracer(opts client.Options) client.Options {
