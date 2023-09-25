@@ -13,6 +13,7 @@ import (
 	tp_otel "go.temporal.io/sdk/contrib/opentelemetry"
 	"go.temporal.io/sdk/workflow"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"strings"
 	"time"
 )
@@ -70,6 +71,9 @@ func setupTemporalInternal(config *TemporalSetupConfig, logger *lggr.LogWrapper)
 		Namespace:          config.Namespace,
 		ContextPropagators: []workflow.ContextPropagator{},
 		Logger:             temporalLogger,
+		ConnectionOptions: client.ConnectionOptions{
+			DialOptions: []grpc.DialOption{grpc.WithTimeout(10 * time.Second)},
+		},
 	})
 	if err != nil {
 		logger.Error("could not connect to temporal via dial, panicking", zap.Error(err))
