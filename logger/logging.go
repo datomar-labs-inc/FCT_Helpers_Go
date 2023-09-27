@@ -14,17 +14,18 @@ type ContextKeyType string
 
 const ContextKey = ContextKeyType("__lggr.log_wrapper")
 
-//type LogWrapper struct {
+// type LogWrapper struct {
 //	CallerSkip     int         `json:"caller_skip"`
 //	DetachedFields []zap.Field `json:"detached_fields"`
 //	log            *zap.Logger
 //	ctx            context.Context
-//}
+// }
 
 type LogWrapper = zap.Logger
 
-func New() *LogWrapper {
+func New(level zap.AtomicLevel) *LogWrapper {
 	config := zap.NewProductionConfig()
+	config.Level = level
 	config.OutputPaths = []string{"stdout"}
 
 	lg, err := config.Build()
