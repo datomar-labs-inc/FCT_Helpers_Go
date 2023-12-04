@@ -322,3 +322,11 @@ func WaitForSomethingToHappen(ctx context.Context, timeoutSeconds int, checker f
 func RandFromSlice[T any](slice []T) T {
 	return slice[rand.Intn(len(slice))]
 }
+
+func PointerSliceToValueSlice[T any](slice []*T) (out []T) {
+	for _, ptr := range slice {
+		out = append(out, *ptr)
+	}
+
+	return
+}
