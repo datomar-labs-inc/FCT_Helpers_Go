@@ -226,13 +226,31 @@ func MustGetWorkflowSingleID(workflowID, runID string) string {
 	return base64.RawURLEncoding.EncodeToString(marshalled)
 }
 
+func GetWorkflowSingleID(workflowID, runID string) (string, error) {
+	workflowID = strings.TrimSpace(workflowID)
+	runID = strings.TrimSpace(runID)
+
+	if workflowID == "" {
+		return "", ferr.Wrap(errors.New("empty workflow id"))
+	}
+
+	marshalled, err := json.Marshal(workflowRunIdentifier{
+		WorkflowID: workflowID,
+		RunID:      runID,
+	})
+	if err != nil {
+		return "", ferr.Wrap(err)
+	}
+
+	return base64.RawURLEncoding.EncodeToString(marshalled), nil
+}
+
 func MustExtractWorkflowSingleID(ctx workflow.Context) string {
 	info := workflow.GetInfo(ctx)
 	return MustGetWorkflowSingleID(info.WorkflowExecution.ID, info.WorkflowExecution.RunID)
 }
 
 func ParseWorkflowSingleID(id string) (workflowID string, runID string, err error) {
-
 	decoded, err := base64.RawURLEncoding.DecodeString(id)
 	if err != nil {
 		return "", "", ferr.Wrap(err)
